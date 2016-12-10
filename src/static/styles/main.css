@@ -1,0 +1,22 @@
+.header {
+  padding-left: 20px;
+}
+
+.container {
+  padding-top: 50px;
+}
+
+.register-form {
+  display: inline-block;
+  padding: 0px 30px 30px 30px;
+}
+
+.field {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.btn-submit-container {
+  margin-top: 20px;
+  text-align: right;
+}
