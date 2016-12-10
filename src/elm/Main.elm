@@ -2,7 +2,6 @@ import Html exposing (..)
 import Html.Attributes exposing (href, class, style)
 
 import Material
-import Material.Scheme
 import Material.Button as Button
 import Material.Options as Options exposing (cs, css)
 import Material.Layout as Layout
@@ -18,8 +17,20 @@ import Debug
 import Regex
 import Result
 
+import Http
+import Json.Encode as Encode
+import Json.Decode as Decode
+import Json.Decode.Pipeline as DecodePipeline exposing (required)
 
 -- MODEL
+
+type alias User =
+  { firstName: String
+  , lastName: String
+  , username: String
+  , email: String
+  }
+
 
 type alias RegistrationForm =
   { firstName: String
@@ -33,6 +44,7 @@ type alias RegistrationForm =
 type alias Model =
   { mdl : Material.Model -- Boilerplate: model store for any and all Mdl components you use.
   , registrationForm: Form () RegistrationForm
+  , user: Maybe User
   }
 
 
@@ -40,6 +52,7 @@ init : ( Model, Cmd Msg )
 init =
   ( { registrationForm = Form.initial [] validate
     , mdl = Material.model
+    , user = Nothing
     }
   , Cmd.none
   )
@@ -50,7 +63,7 @@ validate : Validation () RegistrationForm
 validate =
   let
     textPattern = Regex.regex "^[a-zA-Z]+$"
-    usernamePattern = Regex.regex "^(a-zA-Z)+[a-zA-Z0-9_]*$"
+    usernamePattern = Regex.regex "^[a-zA-Z]+[a-zA-Z0-9_]*$"
   in
     map6 RegistrationForm
       (field "firstName" (string |> andThen (format textPattern)))
@@ -66,21 +79,73 @@ validate =
 type Msg =
     FormMsg (Form.Msg)
   | Mdl (Material.Msg Msg)
+  | Register (Form.Msg)
+  | RegisterResult (Result Http.Error User)
 
+userDecoder : Decode.Decoder User
+userDecoder =
+  DecodePipeline.decode User
+    |> required "first_name" Decode.string
+    |> required "last_name" Decode.string
+    |> required "username" Decode.string
+    |> required "email" Decode.string
+
+registerUser : RegistrationForm -> Cmd Msg
+registerUser
+  { firstName
+  , lastName
+  , username
+  , email
+  , password
+  } =
+    let
+      accountData = Encode.object
+        [ ("first_name", Encode.string firstName)
+        , ("last_name", Encode.string lastName)
+        , ("username", Encode.string username)
+        , ("email", Encode.string email)
+        , ("password", Encode.string password)
+        ]
+
+      body = Http.jsonBody accountData
+
+      request = Http.post "http://localhost:5000/register" body userDecoder
+    in
+      Http.send RegisterResult request
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  case msg of
-    -- Boilerplate: Mdl action handler.
-    Mdl mdlMsg ->
-      Material.update mdlMsg model
+  let
+    updateForm formMsg =
+      { model | registrationForm = Form.update formMsg model.registrationForm }
+  in
+    case msg of
+      -- Boilerplate: Mdl action handler.
+      Mdl mdlMsg ->
+        Material.update mdlMsg model
 
-    FormMsg formMsg ->
-      ( { model | registrationForm = Form.update formMsg model.registrationForm }, Cmd.none )
+      Register formMsg ->
+        let
+          newModel = updateForm formMsg
+          output = Form.getOutput newModel.registrationForm
+          _ = Debug.log "output" (toString output)
+        in
+          case output of
+            Just formData -> (newModel, registerUser formData)
+            Nothing -> (newModel, Cmd.none)
+
+      FormMsg formMsg ->
+        (updateForm formMsg, Cmd.none)
+
+      RegisterResult (Result.Ok user) ->
+        ({ model | user = Just user }, Cmd.none)
+
+      RegisterResult (Result.Err _) ->
+        (model , Cmd.none)
+
 
 
 -- VIEW
-
 
 type alias Mdl =
   Material.Model
@@ -116,7 +181,6 @@ viewBody { mdl, registrationForm } =
     getError fieldName errorMsg =
       let
         field = getField fieldName
-        _ = Debug.log fieldName field
       in
         case field.liveError of
           Just error -> Textfield.error errorMsg
@@ -191,7 +255,7 @@ viewBody { mdl, registrationForm } =
               [ Button.render Mdl [0] mdl
                 [ Button.raised
                 , Button.colored
-                , Button.onClick <| FormMsg Form.Submit
+                , Button.onClick <| Register Form.Submit
                 , cs "btb-submit"
                 ]
                 [ text "Register" ]
