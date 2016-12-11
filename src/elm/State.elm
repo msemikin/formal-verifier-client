@@ -40,7 +40,9 @@ update msg model =
       Material.update mdlMsg model
 
     RegisterMsg (Register.Types.RegisterResult (Result.Ok user)) ->
-      ({ model | user = Just user }, Cmd.none)
+      ({ model | user = Just user }
+      , Navigation.newUrl "#/profile"
+      )
     
     RegisterMsg msg ->
       let
