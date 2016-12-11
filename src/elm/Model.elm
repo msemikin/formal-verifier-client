@@ -1,15 +1,17 @@
 module Model exposing (Model)
 
-import Navigation
 import Material
 
 import Types exposing (User)
-import Register.Types as RegisterTypes
+import Register.Types
+import Login.Types
 import Routing exposing (..)
 
 type alias Model =
   { mdl : Material.Model
-  , history: List Route
+  , history : List Route
   , user : Maybe User
-  , register : RegisterTypes.Model
+  , accessToken : Maybe String
+  , register : Register.Types.Model
+  , login : Login.Types.Model
   }

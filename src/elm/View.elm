@@ -2,15 +2,16 @@ module View exposing (view)
 
 import Material.Layout as Layout
 import Html exposing (..)
-import Html.Attributes exposing (href, class, style)
+import List exposing (head)
+import Maybe exposing (withDefault)
 
 import Messages exposing (Msg(..))
 import Model exposing (Model)
 import Register.View
 import Login.View
 import Routing exposing (..)
-import List exposing (head)
-import Maybe exposing (withDefault)
+import Header.View
+import Profile.View
 
 
 view : Model -> Html Msg
@@ -18,19 +19,24 @@ view model =
   Layout.render Mdl model.mdl
     [ Layout.fixedHeader
     ]
-    { header = [ h4 [ class "header" ] [ text "Counter" ] ]
+    { header = [ Header.View.view model ]
     , drawer = []
     , tabs = ( [], [] )
     , main = [ page model ]
     }
 
+
 page : Model -> Html Msg
-page { history, register } =
+page { history, register, login } =
   case withDefault RegistrationRoute (head history) of
     RegistrationRoute ->
       Html.map RegisterMsg (Register.View.view register) 
     
-    LoginRoute -> Login.View.view
+    LoginRoute ->
+      Html.map LoginMsg (Login.View.view login)
+    
+    ProfileRoute ->
+      Profile.View.view
 
     NotFoundRoute -> notFoundView
 

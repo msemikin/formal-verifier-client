@@ -1,7 +1,6 @@
 module Register.View exposing (view)
 
 import Form exposing (Form)
-import Form.Field as Field
 import Html exposing (..)
 import Html.Attributes exposing (href, class, style)
 import Material.Button as Button
@@ -10,30 +9,15 @@ import Material.Textfield as Textfield
 import Material.Options as Options exposing (cs)
 
 import Register.Types exposing (Model, Msg(..))
+import Helpers.Form as FormHelpers
 
 view: Model -> Html Msg
 view { mdl, registrationForm } =
   let
-    getField fieldName = Form.getFieldAsString fieldName registrationForm
-    getFieldValue fieldName = Maybe.withDefault "" (getField fieldName).value
-
-    handleInput : String -> String -> Msg
-    handleInput fieldName value = FormMsg (Form.Input fieldName Form.Text (Field.String value))
-
-    connectField : String -> List (Textfield.Property Msg)
-    connectField fieldName =
-      [ Textfield.value (getFieldValue fieldName)
-      , Textfield.onInput (handleInput fieldName)
-      ]
-
-    getError : String -> String -> Textfield.Property Msg
-    getError fieldName errorMsg =
-      let
-        field = getField fieldName
-      in
-        case field.liveError of
-          Just error -> Textfield.error errorMsg
-          Nothing -> Options.nop
+    getField = FormHelpers.getField registrationForm
+    getFieldValue = FormHelpers.getFieldValue registrationForm
+    connectField = FormHelpers.connectField FormMsg registrationForm
+    getError = FormHelpers.getError registrationForm
 
     onlyLetters = "Can contain only letters"
 

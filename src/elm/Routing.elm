@@ -6,6 +6,7 @@ import UrlParser exposing (..)
 type Route =
     RegistrationRoute
   | LoginRoute
+  | ProfileRoute
   | NotFoundRoute
 
 
@@ -14,6 +15,7 @@ matchers = oneOf
   [ map RegistrationRoute top
   , map RegistrationRoute (s "register")
   , map LoginRoute (s "login")
+  , map ProfileRoute (s "profile")
   ]
 
 
