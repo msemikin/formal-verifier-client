@@ -9,6 +9,7 @@ import Model exposing (Model)
 import Messages exposing (Msg(..))
 import Register.Types as RegisterTypes
 import Register.State as RegisterState
+import Routing exposing (..)
 
 init : Navigation.Location -> ( Model, Cmd Msg )
 init location =
@@ -16,7 +17,7 @@ init location =
     (registerModel, registerCmd) = RegisterState.init
   in
     ( { mdl = Material.model
-      , history = [ location ]
+      , history = [ parseLocation location ]
       , user = Nothing
       , register = registerModel
       }
@@ -39,6 +40,9 @@ update msg model =
         ({ model | register = newRegisterModel }, Cmd.map RegisterMsg registerCmd)
     
     UrlChange location ->
-      ( { model | history = location :: model.history }
+      let
+        newRoute = parseLocation location
+      in
+      ( { model | history = newRoute :: model.history }
       , Cmd.none
       )
