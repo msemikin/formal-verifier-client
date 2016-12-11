@@ -5,6 +5,7 @@ import Material
 import Types exposing (User)
 import Register.Types
 import Login.Types
+import Profile.Types
 import Routing exposing (..)
 
 type alias Model =
@@ -14,4 +15,5 @@ type alias Model =
   , accessToken : Maybe String
   , register : Register.Types.Model
   , login : Login.Types.Model
+  , profile : Profile.Types.Model
   }

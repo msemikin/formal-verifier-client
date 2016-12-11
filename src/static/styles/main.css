@@ -40,3 +40,13 @@
   margin-top: 20px;
   text-align: right;
 }
+
+.subtitle {
+  margin-top: 0;
+  margin-bottom: 30px;
+  color: #3f51b5;
+}
+
+.list-item:not(:last-child) {
+  border-bottom: 1px solid lightgrey;
+}

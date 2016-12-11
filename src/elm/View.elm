@@ -27,7 +27,7 @@ view model =
 
 
 page : Model -> Html Msg
-page { history, register, login } =
+page { history, register, login, profile } =
   case withDefault RegistrationRoute (head history) of
     RegistrationRoute ->
       Html.map RegisterMsg (Register.View.view register) 
@@ -36,7 +36,7 @@ page { history, register, login } =
       Html.map LoginMsg (Login.View.view login)
     
     ProfileRoute ->
-      Profile.View.view
+      Html.map ProfileMsg (Profile.View.view profile)
 
     NotFoundRoute -> notFoundView
 

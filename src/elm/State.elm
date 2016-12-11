@@ -12,6 +12,8 @@ import Register.Types
 import Register.State
 import Login.State
 import Login.Types
+import Profile.State
+import Profile.Types
 import Routing exposing (..)
 
 init : Navigation.Location -> ( Model, Cmd Msg )
@@ -19,6 +21,7 @@ init location =
   let
     (registerModel, registerCmd) = Register.State.init
     (loginModel, loginCmd) = Login.State.init
+    (profileModel, profileCmd) = Profile.State.init
   in
     ( { mdl = Material.model
       , history = [ parseLocation location ]
@@ -26,10 +29,12 @@ init location =
       , accessToken = Nothing
       , register = registerModel
       , login = loginModel
+      , profile = profileModel
       }
     , Cmd.batch
       [ Cmd.map RegisterMsg registerCmd
       , Cmd.map LoginMsg loginCmd
+      , Cmd.map ProfileMsg profileCmd
       ]
     )
 
@@ -70,6 +75,13 @@ update msg model =
         ( { model | history = newRoute :: model.history }
         , Cmd.none
         )
+    
+    ProfileMsg msg ->
+      let
+        (newProfileModel, profileCmd) = Profile.State.update msg model.profile
+      in
+        ({ model | profile = newProfileModel }, Cmd.map ProfileMsg profileCmd)
+        
 
     ShowProfile ->
       ( model, Navigation.newUrl "#/profile" )
