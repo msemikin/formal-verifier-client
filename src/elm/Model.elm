@@ -18,5 +18,4 @@ type alias Model =
   , pageData : PageData
   , user : Maybe User
   , accessToken : Maybe String
-  , projects : List Project
   }

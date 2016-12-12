@@ -1,8 +1,8 @@
-module Rest exposing (fetchProjects)
+module Profile.Rest exposing (fetchProjects)
 
 import Http
 
-import Messages exposing (Msg(..))
+import Profile.Types exposing (Msg(..))
 import Helpers.Rest
 import Config exposing (apiUrl)
 import Decoder exposing (projectDecoder)
@@ -12,7 +12,7 @@ fetchProjects : String -> Cmd Msg
 fetchProjects accessToken =
     let
       request = Helpers.Rest.secureRequest
-        { url = apiUrl ++ "/login"
+        { url = apiUrl ++ "/projects"
         , body = Http.emptyBody
         , decoder = list projectDecoder
         , method = "GET"

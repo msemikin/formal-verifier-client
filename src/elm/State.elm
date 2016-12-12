@@ -25,7 +25,6 @@ init =
       , pageData = LoginData <| Tuple.first Login.State.init
       , user = Nothing
       , accessToken = Nothing
-      , projects = []
       }
     
     effects = Cmd.batch
@@ -35,20 +34,31 @@ init =
   in
     (model, effects)
 
-initPage : PageData -> Route -> ( PageData, Cmd Msg )
-initPage pageData route =
+initPage : PageData -> Route -> Maybe String -> ( PageData, Cmd Msg )
+initPage pageData route accessToken =
   let
-    newPageData = case route of
-      LoginRoute -> LoginData <| Tuple.first Login.State.init
-      ProfileRoute -> ProfileData <| Tuple.first Profile.State.init
-      RegisterRoute -> RegisterData <| Tuple.first Register.State.init
-      NotFoundRoute -> pageData
+    (newPageData, effect) =
+      case route of
+        LoginRoute ->
+          let
+            (data, effect) = Login.State.init
+          in
+            (LoginData data, Cmd.map LoginMsg effect)
 
-    effect = case route of
-      LoginRoute -> Cmd.map LoginMsg <| Tuple.second Login.State.init
-      ProfileRoute -> Cmd.map ProfileMsg <| Tuple.second Profile.State.init
-      RegisterRoute -> Cmd.map RegisterMsg <| Tuple.second Register.State.init
-      NotFoundRoute -> Cmd.none
+        ProfileRoute ->
+          let
+            (data, effect) = Profile.State.init accessToken
+          in
+            (ProfileData data, Cmd.map ProfileMsg effect)
+
+        RegisterRoute ->
+          let
+            (data, effect) = Register.State.init
+          in
+            (RegisterData data, Cmd.map RegisterMsg effect)
+
+        NotFoundRoute -> (pageData, Cmd.none)
+
 
   in
     (newPageData, effect)
@@ -64,7 +74,7 @@ update msg model =
         let
           proceedToPage =
             let
-              (pageData, effect) = initPage model.pageData route
+              (pageData, effect) = initPage model.pageData route model.accessToken
             in
               ( { model | currentRoute = route, pageData = pageData }
               , effect
@@ -121,14 +131,6 @@ update msg model =
               ({ model | pageData = LoginData pageData }, Cmd.map LoginMsg effect)
 
           _ -> (model, Cmd.none)
-      
-      ProjectsResult (Ok projects) ->
-        ( { model | projects = projects }
-        , Cmd.none
-        )
-      
-      ProjectsResult (Err _) ->
-        (model, Cmd.none)
       
       ProfileMsg msg ->
         case model.pageData of
