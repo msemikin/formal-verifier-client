@@ -7,13 +7,17 @@ import Material.Options as Options exposing (cs)
 import Material.Elevation as Elevation
 import Material.List as List
 import Material.Badge as Badge
+import Material.Button as Button
+import Material.Icon as Icon
+import Material.Dialog as Dialog
 import List
 
 import Profile.Types exposing (Model, Msg(..))
 import Types exposing (Project, Route(..))
+import CreateProjectDialog.View
 
 view : Model -> Html Msg
-view { mdl, projects } =
+view { mdl, projects, projectForm } =
   div
     [ class "mdl-grid container" ]
     [ div [ class "mdl-cell mdl-cell--12-col" ]
@@ -24,6 +28,15 @@ view { mdl, projects } =
         [ div []
           [ List.ul [] <| List.map project projects ]
         ]
+      , Button.render Mdl [0] mdl
+        [ Button.fab
+        , Button.colored
+        , Button.ripple
+        , cs "btn-add-project"
+        , Dialog.openOn "click"
+        ]
+        [ Icon.i "add"]
+      , CreateProjectDialog.View.view projectForm mdl
       ]
     ]
 
@@ -34,7 +47,7 @@ project { name, description, models } =
     , List.withSubtitle
     ]
     [ List.content
-      [ Options.attribute <| Html.Events.onClick (UpdateRoute LoginRoute)
+      [ Options.attribute <| Html.Events.onClick (UpdateRoute ProjectRoute)
       ]
       [ text name
       , List.subtitle []

@@ -55,6 +55,9 @@ location2messages location =
           "profile" ->
             [ UpdateRoute ProfileRoute ]
           
+          "project" ->
+            [ UpdateRoute ProjectRoute ]
+          
           _ ->
             [ UpdateRoute NotFoundRoute ]
 

@@ -28,7 +28,7 @@ view model =
 
 
 page : Model -> Html Msg
-page { currentRoute, pageData } =
+page { accessToken, currentRoute, pageData } =
   case currentRoute of
     RegisterRoute ->
       case pageData of

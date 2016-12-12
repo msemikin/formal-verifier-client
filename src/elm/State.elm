@@ -149,7 +149,10 @@ update msg model =
         case model.pageData of
           ProfileData data ->
             let
-              (pageData, effect) = Profile.State.update msg data
+              (pageData, effect) =
+                case model.accessToken of
+                  Just accessToken -> Profile.State.update accessToken msg data
+                  Nothing -> (data, Cmd.none)
             in
               ({ model | pageData = ProfileData pageData }, Cmd.map ProfileMsg effect)
 

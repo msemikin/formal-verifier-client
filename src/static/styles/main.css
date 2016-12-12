@@ -51,3 +51,13 @@
 .list-item:not(:last-child) {
   border-bottom: 1px solid lightgrey;
 }
+
+.btn-add-project {
+  position: fixed;
+  bottom: 20px;
+  right: 40px;
+}
+
+.project-dialog {
+  width: 500px;
+}
