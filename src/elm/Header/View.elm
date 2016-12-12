@@ -7,6 +7,7 @@ import Html.Attributes exposing (href, class, style)
 
 import Model exposing (Model)
 import Messages exposing (Msg(..))
+import Types exposing (Route(..))
 
 view : Model -> Html Msg
 view { mdl, user } =
@@ -15,19 +16,16 @@ view { mdl, user } =
     , div [ class "header-actions" ]
         <| case user of
           Just user ->
-            [ a [href "/#/profile"]
-                [ Button.render Mdl [0] mdl []
-                    [ text <| user.firstName ++ " " ++ user.lastName ]
-                ]
+            [ Button.render Mdl [0] mdl
+              [ Button.onClick (UpdateRoute ProfileRoute) ]
+              [ text <| user.firstName ++ " " ++ user.lastName ]
             ]
           Nothing ->
-            [ a [href "/#/login"]
-                [ Button.render Mdl [0] mdl []
-                    [ text "Login" ]
-                ]
-            , a [href "/#/register"]
-                [ Button.render Mdl [1] mdl []
-                    [ text "Register" ]
-                ]
+            [ Button.render Mdl [0] mdl
+              [ Button.onClick (UpdateRoute LoginRoute) ]
+              [ text "Login" ]
+            , Button.render Mdl [1] mdl
+              [ Button.onClick (UpdateRoute RegisterRoute) ]
+              [ text "Register" ]
             ]
     ]

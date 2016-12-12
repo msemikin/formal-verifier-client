@@ -1,15 +1,26 @@
-module Decoder exposing (userDecoder)
+module Decoder exposing (..)
 
-import Json.Decode as Decode
+import Json.Decode exposing (..)
 import Json.Decode.Pipeline as DecodePipeline exposing (required)
 
-import Types exposing (User)
+import Types exposing (..)
 
-userDecoder : Decode.Decoder User
+modelDecoder : Decoder String
+modelDecoder = string
+
+projectDecoder : Decoder Project
+projectDecoder =
+  DecodePipeline.decode Project
+    |> required "name" string
+    |> required "description" string
+    |> required "models" (list modelDecoder)
+
+
+userDecoder : Decoder User
 userDecoder =
   DecodePipeline.decode User
-    |> required "first_name" Decode.string
-    |> required "last_name" Decode.string
-    |> required "username" Decode.string
-    |> required "email" Decode.string
+    |> required "first_name" string
+    |> required "last_name" string
+    |> required "username" string
+    |> required "email" string
 

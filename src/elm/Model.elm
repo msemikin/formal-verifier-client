@@ -1,19 +1,22 @@
-module Model exposing (Model)
+module Model exposing (Model, PageData(..))
 
 import Material
 
-import Types exposing (User)
+import Types exposing (..)
 import Register.Types
 import Login.Types
 import Profile.Types
-import Routing exposing (..)
+
+type PageData =
+    RegisterData Register.Types.Model
+  | LoginData Login.Types.Model
+  | ProfileData Profile.Types.Model
 
 type alias Model =
   { mdl : Material.Model
-  , history : List Route
+  , currentRoute : Route
+  , pageData : PageData
   , user : Maybe User
   , accessToken : Maybe String
-  , register : Register.Types.Model
-  , login : Login.Types.Model
-  , profile : Profile.Types.Model
+  , projects : List Project
   }

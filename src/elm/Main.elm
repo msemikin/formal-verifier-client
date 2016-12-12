@@ -1,12 +1,21 @@
-import Navigation
+module Main exposing (..)
+
+import RouteUrl exposing (RouteUrlProgram)
+
+import Routing exposing (..)
 import State exposing (init, update)
 import View exposing (view)
-import Messages exposing (Msg(UrlChange))
+import Model exposing (Model)
+import Messages exposing (Msg)
 
+main : RouteUrlProgram Never Model Msg
 main =
-  Navigation.program UrlChange
-    { init = init
+  RouteUrl.program
+    { delta2url = delta2url
+    , location2messages = location2messages
+    , init = init
     , view = view
     , update = update
     , subscriptions = (\_ -> Sub.none)
     }
+

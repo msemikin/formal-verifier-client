@@ -59,7 +59,8 @@ if ( TARGET_ENV === 'development' ) {
 
     devServer: {
       inline:   true,
-      progress: true
+      progress: true,
+      historyApiFallback: true,
     },
 
     module: {

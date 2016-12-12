@@ -6,12 +6,12 @@ import List exposing (head)
 import Maybe exposing (withDefault)
 
 import Messages exposing (Msg(..))
-import Model exposing (Model)
+import Model exposing (Model, PageData(..))
 import Register.View
 import Login.View
-import Routing exposing (..)
 import Header.View
 import Profile.View
+import Types exposing (Route(..))
 
 
 view : Model -> Html Msg
@@ -27,16 +27,25 @@ view model =
 
 
 page : Model -> Html Msg
-page { history, register, login, profile } =
-  case withDefault RegistrationRoute (head history) of
-    RegistrationRoute ->
-      Html.map RegisterMsg (Register.View.view register) 
-    
+page { currentRoute, pageData } =
+  case currentRoute of
+    RegisterRoute ->
+      case pageData of
+        RegisterData data ->
+          Html.map RegisterMsg (Register.View.view data) 
+        _ -> notFoundView
+
     LoginRoute ->
-      Html.map LoginMsg (Login.View.view login)
+      case pageData of
+        LoginData data ->
+          Html.map LoginMsg (Login.View.view data) 
+        _ -> notFoundView
     
     ProfileRoute ->
-      Html.map ProfileMsg (Profile.View.view profile)
+      case pageData of
+        ProfileData data ->
+          Html.map ProfileMsg (Profile.View.view data) 
+        _ -> notFoundView
 
     NotFoundRoute -> notFoundView
 
