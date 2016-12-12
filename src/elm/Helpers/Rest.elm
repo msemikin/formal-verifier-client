@@ -9,17 +9,17 @@ type alias SecureSendPayload d =
   , method : String
   , body : Body
   , decoder : Decoder d
-  , sessionToken : String
+  , accessToken : String
   }
 
 secureRequest : SecureSendPayload d -> Request d
-secureRequest { method, body, decoder, sessionToken, url } =
+secureRequest { method, body, decoder, accessToken, url } =
   request
     { method = method
     , url = url
     , body = body
     , expect = expectJson decoder
-    , headers = [header "Authorization" ("Bearer " ++ sessionToken)]
+    , headers = [header "Authorization" ("Bearer " ++ accessToken)]
     , timeout = Nothing
     , withCredentials = False
     }

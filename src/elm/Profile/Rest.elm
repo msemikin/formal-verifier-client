@@ -9,14 +9,14 @@ import Decoder exposing (projectDecoder)
 import Json.Decode exposing (list)
 
 fetchProjects : String -> Cmd Msg
-fetchProjects sessionToken =
+fetchProjects accessToken =
     let
       request = Helpers.Rest.secureRequest
         { url = apiUrl ++ "/login"
         , body = Http.emptyBody
         , decoder = list projectDecoder
         , method = "GET"
-        , sessionToken = sessionToken
+        , accessToken = accessToken
         }
     in
       Http.send ProjectsResult request

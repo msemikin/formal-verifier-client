@@ -15,3 +15,5 @@ type Msg =
   | LoginMsg Login.Types.Msg
   | ProfileMsg Profile.Types.Msg
   | ProjectsResult (Result Http.Error (List Project))
+  | AccessTokenResult String
+  | SilentLoginResult (Result Http.Error User)

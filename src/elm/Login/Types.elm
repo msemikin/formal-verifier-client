@@ -1,7 +1,7 @@
 module Login.Types exposing (LoginForm, Model, Msg(..))
 
 import Material
-import Types exposing (LoginResponse)
+import Types exposing (LoginResponse, User)
 import Form exposing (Form)
 import Http
 

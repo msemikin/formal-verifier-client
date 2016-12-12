@@ -1,4 +1,4 @@
-module State exposing (init, update)
+module State exposing (init, update, subscriptions)
 
 import Debug
 import Material
@@ -13,7 +13,8 @@ import Register.State
 import Login.State
 import Login.Types
 import Profile.State
-import Routing exposing (..)
+import LocaleStorage exposing (..)
+import Rest exposing (silentLogin)
 
 init : ( Model, Cmd Msg )
 init =
@@ -27,7 +28,10 @@ init =
       , projects = []
       }
     
-    effects = Cmd.map LoginMsg <| Tuple.second Login.State.init
+    effects = Cmd.batch
+      [ Cmd.map LoginMsg <| Tuple.second Login.State.init
+      , read "accessToken"
+      ]
   in
     (model, effects)
 
@@ -101,9 +105,9 @@ update msg model =
           , accessToken = Just accessToken
           , currentRoute = ProfileRoute
           }
-        , Cmd.none
+        , save <| "accessToken=" ++ accessToken
         )
-
+      
       LoginMsg msg ->
         case model.pageData of
           LoginData data ->
@@ -131,3 +135,23 @@ update msg model =
               ({ model | pageData = ProfileData pageData }, Cmd.map ProfileMsg effect)
 
           _ -> (model, Cmd.none)
+      
+      AccessTokenResult accessToken ->
+        case accessToken of
+          "" -> (model, Cmd.none)
+          _ -> ({ model | accessToken = Just accessToken }, silentLogin accessToken)
+
+      SilentLoginResult (Result.Ok user) ->
+        ( { model | user = Just user
+          , currentRoute = ProfileRoute
+          }
+        , Cmd.none
+        )
+
+      SilentLoginResult _ -> (model, Cmd.none)
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  readResult AccessTokenResult
+
