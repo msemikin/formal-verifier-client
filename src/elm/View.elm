@@ -11,6 +11,7 @@ import Register.View
 import Login.View
 import Header.View
 import Profile.View
+import Project.View
 import Types exposing (Route(..))
 
 
@@ -45,6 +46,12 @@ page { currentRoute, pageData } =
       case pageData of
         ProfileData data ->
           Html.map ProfileMsg (Profile.View.view data) 
+        _ -> blankView <| toString pageData
+    
+    ProjectRoute ->
+      case pageData of
+        ProjectData data ->
+          Html.map ProjectMsg (Project.View.view data)
         _ -> blankView <| toString pageData
 
     NotFoundRoute -> blankView "Not found"

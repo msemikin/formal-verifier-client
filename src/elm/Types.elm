@@ -4,6 +4,7 @@ type Route =
     RegisterRoute
   | LoginRoute
   | ProfileRoute
+  | ProjectRoute
   | NotFoundRoute
 
 type alias User =

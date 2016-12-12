@@ -45,6 +45,7 @@
   margin-top: 0;
   margin-bottom: 30px;
   color: #3f51b5;
+  padding-left: 16px;
 }
 
 .list-item:not(:last-child) {

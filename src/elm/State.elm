@@ -13,6 +13,9 @@ import Register.State
 import Login.State
 import Login.Types
 import Profile.State
+import Profile.Types
+import Project.State
+import Project.Types
 import LocaleStorage exposing (..)
 import Rest exposing (silentLogin)
 
@@ -56,6 +59,12 @@ initPage pageData route accessToken =
             (data, effect) = Register.State.init
           in
             (RegisterData data, Cmd.map RegisterMsg effect)
+        
+        ProjectRoute ->
+          let
+            (data, effect) = Project.State.init
+          in
+            (ProjectData data, Cmd.map ProjectMsg effect)
 
         NotFoundRoute -> (pageData, Cmd.none)
 
@@ -89,6 +98,7 @@ update msg model =
             Nothing ->
               case route of
                 ProfileRoute -> update (UpdateRoute LoginRoute) model
+                ProjectRoute -> update (UpdateRoute LoginRoute) model
                 _ -> proceedToPage
 
       Mdl mdlMsg ->
@@ -132,6 +142,9 @@ update msg model =
 
           _ -> (model, Cmd.none)
       
+      ProfileMsg (Profile.Types.UpdateRoute route)
+        -> update (UpdateRoute route) model
+      
       ProfileMsg msg ->
         case model.pageData of
           ProfileData data ->
@@ -140,6 +153,15 @@ update msg model =
             in
               ({ model | pageData = ProfileData pageData }, Cmd.map ProfileMsg effect)
 
+          _ -> (model, Cmd.none)
+      
+      ProjectMsg msg ->
+        case model.pageData of
+          ProjectData data ->
+            let
+              (pageData, effect) = Project.State.update msg data
+            in
+              ({ model | pageData = ProjectData pageData }, Cmd.map ProjectMsg effect)
           _ -> (model, Cmd.none)
       
       AccessTokenResult accessToken ->

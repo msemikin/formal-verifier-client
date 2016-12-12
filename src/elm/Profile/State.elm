@@ -31,3 +31,5 @@ update msg model =
     
     ProjectsResult (Err _) ->
       (model, Cmd.none)
+    
+    UpdateRoute _ -> (model, Cmd.none)

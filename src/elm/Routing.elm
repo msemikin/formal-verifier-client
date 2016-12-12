@@ -31,6 +31,9 @@ delta2builder previous current =
       ProfileRoute ->
         builder |> prependToPath [ "profile" ]
       
+      ProjectRoute ->
+        builder |> prependToPath [ "projects" ]
+
       NotFoundRoute ->
         builder |> prependToPath [ "notfound" ]
 
