@@ -33,25 +33,25 @@ page { currentRoute, pageData } =
       case pageData of
         RegisterData data ->
           Html.map RegisterMsg (Register.View.view data) 
-        _ -> notFoundView
+        _ -> blankView <| toString pageData
 
     LoginRoute ->
       case pageData of
         LoginData data ->
           Html.map LoginMsg (Login.View.view data) 
-        _ -> notFoundView
+        _ -> blankView <| toString pageData
     
     ProfileRoute ->
       case pageData of
         ProfileData data ->
           Html.map ProfileMsg (Profile.View.view data) 
-        _ -> notFoundView
+        _ -> blankView <| toString pageData
 
-    NotFoundRoute -> notFoundView
+    NotFoundRoute -> blankView "Not found"
 
 
-notFoundView : Html Msg
-notFoundView =
+blankView : String -> Html Msg
+blankView message =
     div []
-        [ text "Not found"
+        [ text message
         ]

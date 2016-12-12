@@ -54,7 +54,6 @@ initPage pageData route =
     (newPageData, effect)
 
 
-
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   let
@@ -86,9 +85,9 @@ update msg model =
         Material.update mdlMsg model
 
       RegisterMsg (Register.Types.RegisterResult (Result.Ok user)) ->
-        ({ model | user = Just user, currentRoute = ProfileRoute }
-        , Cmd.none
-        )
+        update
+          (UpdateRoute ProfileRoute)
+          { model | user = Just user, currentRoute = ProfileRoute }
       
       RegisterMsg msg ->
         case model.pageData of
@@ -101,12 +100,17 @@ update msg model =
           _ -> (model, Cmd.none)
 
       LoginMsg (Login.Types.LoginResult (Result.Ok { accessToken, user })) ->
-        ( { model | user = Just user
-          , accessToken = Just accessToken
-          , currentRoute = ProfileRoute
-          }
-        , save <| "accessToken=" ++ accessToken
-        )
+        let
+          (updatedModel, effect) = update
+            (UpdateRoute ProfileRoute)
+            { model | user = Just user
+            , accessToken = Just accessToken
+            }
+        in
+          ( updatedModel
+          , Cmd.batch
+            [ effect, save <| "accessToken=" ++ accessToken ]
+          )
       
       LoginMsg msg ->
         case model.pageData of
@@ -142,11 +146,7 @@ update msg model =
           _ -> ({ model | accessToken = Just accessToken }, silentLogin accessToken)
 
       SilentLoginResult (Result.Ok user) ->
-        ( { model | user = Just user
-          , currentRoute = ProfileRoute
-          }
-        , Cmd.none
-        )
+        update (UpdateRoute ProfileRoute) { model | user = Just user }
 
       SilentLoginResult _ -> (model, Cmd.none)
 
