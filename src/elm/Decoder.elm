@@ -1,7 +1,7 @@
 module Decoder exposing (..)
 
 import Json.Decode exposing (..)
-import Json.Decode.Pipeline as DecodePipeline exposing (required)
+import Json.Decode.Pipeline as DecodePipeline exposing (required, requiredAt)
 
 import Types exposing (..)
 
@@ -11,6 +11,7 @@ modelDecoder = string
 projectDecoder : Decoder Project
 projectDecoder =
   DecodePipeline.decode Project
+    |> requiredAt ["_id", "$oid"] string
     |> required "name" string
     |> required "description" string
     |> required "models" (list modelDecoder)

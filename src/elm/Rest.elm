@@ -1,11 +1,12 @@
-module Rest exposing (silentLogin)
+module Rest exposing (..)
 
 import Http
+import Json.Decode exposing (list)
 
 import Messages exposing (..)
 import Config exposing (apiUrl)
 import Helpers.Rest
-import Decoder exposing (userDecoder)
+import Decoder exposing (..)
 
 silentLogin : String -> Cmd Msg
 silentLogin accessToken =
@@ -19,3 +20,29 @@ silentLogin accessToken =
       }
   in
     Http.send SilentLoginResult request
+
+fetchProjects : String -> Cmd Msg
+fetchProjects accessToken =
+  let
+    request = Helpers.Rest.secureRequest
+      { url = apiUrl ++ "/projects"
+      , body = Http.emptyBody
+      , decoder = list projectDecoder
+      , method = "GET"
+      , accessToken = accessToken
+      }
+  in
+    Http.send ProjectsResult request
+
+fetchProject : String -> String -> Cmd Msg
+fetchProject id accessToken=
+  let
+    request = Helpers.Rest.secureRequest
+      { url = apiUrl ++ "/projects/" ++ id
+      , body = Http.emptyBody
+      , decoder = projectDecoder
+      , method = "GET"
+      , accessToken = accessToken
+      }
+  in
+    Http.send ProjectResult request

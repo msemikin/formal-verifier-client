@@ -4,7 +4,7 @@ type Route =
     RegisterRoute
   | LoginRoute
   | ProfileRoute
-  | ProjectRoute
+  | ProjectRoute String
   | NotFoundRoute
 
 type alias User =
@@ -22,7 +22,8 @@ type alias LoginResponse =
 type alias LTS = String
 
 type alias Project =
-  { name : String
+  { id : String
+  , name : String
   , description : String
   , models : List LTS
   }

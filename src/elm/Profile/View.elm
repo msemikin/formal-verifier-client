@@ -16,8 +16,8 @@ import Profile.Types exposing (Model, Msg(..))
 import Types exposing (Project, Route(..))
 import CreateProjectDialog.View
 
-view : Model -> Html Msg
-view { mdl, projects, projectForm } =
+view : List Project ->  Model -> Html Msg
+view projects { mdl, projectForm } =
   div
     [ class "mdl-grid container" ]
     [ div [ class "mdl-cell mdl-cell--12-col" ]
@@ -41,13 +41,13 @@ view { mdl, projects, projectForm } =
     ]
 
 project : Project -> Html Msg
-project { name, description, models } =
+project { id, name, description, models } =
   List.li
     [ cs "list-item"
     , List.withSubtitle
     ]
     [ List.content
-      [ Options.attribute <| Html.Events.onClick (UpdateRoute ProjectRoute)
+      [ Options.attribute <| Html.Events.onClick (UpdateRoute <| ProjectRoute id)
       ]
       [ text name
       , List.subtitle []

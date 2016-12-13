@@ -1,28 +1,12 @@
 module Profile.Rest exposing (..)
 
 import Http
-import Json.Decode exposing (list)
 import Json.Encode as Encode
 
 import Profile.Types exposing (..)
 import Helpers.Rest
 import Config exposing (apiUrl)
 import Decoder exposing (projectDecoder)
-import Types exposing (..)
-
-fetchProjects : String -> Cmd Msg
-fetchProjects accessToken =
-  let
-    request = Helpers.Rest.secureRequest
-      { url = apiUrl ++ "/projects"
-      , body = Http.emptyBody
-      , decoder = list projectDecoder
-      , method = "GET"
-      , accessToken = accessToken
-      }
-  in
-    Http.send ProjectsResult request
-
 
 createProject : ProjectForm -> String -> Cmd Msg
 createProject { name, description } accessToken =

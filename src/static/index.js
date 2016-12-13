@@ -5,16 +5,21 @@ require( './styles/main.css' );
 var Elm = require( '../elm/Main' );
 var app = Elm.Main.embed( document.getElementById( 'main' ) );
 
-app.ports.save.subscribe(function (data) {
-  splits = data.split('=')
-  key = splits[0]
-  data = splits[1]
+app.ports.save.subscribe(function (request) {
+  var splits = request.split('=')
+  var key = splits[0]
+  var data = splits[1]
   console.log('saving data with key: ' + key + " with data: " + data);
   window.localStorage.setItem(key, data);
 });
 
 app.ports.read.subscribe(function (key) {
   console.log('reading data for key', key);
-  data = window.localStorage.getItem(key);
+  var data = window.localStorage.getItem(key);
   app.ports.readResult.send(data || '');
+});
+
+app.ports.closeDialog.subscribe(function () {
+  var dialog = document.querySelector('dialog');
+  dialog.close();
 });

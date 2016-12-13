@@ -6,8 +6,9 @@ import Debug
 import Material
 import Maybe
 
-import Profile.Rest exposing (..)
 import Profile.Types as Types exposing (..)
+import Profile.CloseDialog exposing (..)
+import Profile.Rest exposing (..)
 
 validate : Validation () ProjectForm
 validate =
@@ -15,15 +16,12 @@ validate =
     (field "name" string)
     (field "description" string)
 
-init : Maybe String -> ( Model, Cmd Msg )
-init accessToken =
+init : ( Model, Cmd Msg )
+init =
   ( { mdl = Material.model
-    , projects = []
     , projectForm = Form.initial [] validate
     }
-  , case accessToken of
-      Just accessToken -> fetchProjects accessToken
-      Nothing -> Cmd.none
+  , Cmd.none
   )
 
 update : String -> Msg -> Model -> (Model, Cmd Msg)
@@ -37,14 +35,6 @@ update accessToken msg model =
       Mdl mdlMsg ->
         Material.update mdlMsg model
       
-      ProjectsResult (Ok projects) ->
-        ( { model | projects = projects }
-        , Cmd.none
-        )
-      
-      ProjectsResult (Err _) ->
-        (model, Cmd.none)
-      
       UpdateRoute _ -> (model, Cmd.none)
 
       FormMsg formMsg ->
@@ -54,15 +44,14 @@ update accessToken msg model =
         let
           newModel = updateForm formMsg
           output = Form.getOutput newModel.projectForm
-          _ = Debug.log "output" <| toString newModel.projectForm
         in
           case output of
             Just formData -> (newModel, createProject formData accessToken)
             Nothing -> (newModel, Cmd.none)
       
       CreateProjectResult (Ok project) ->
-        ( { model | projects = model.projects ++ [project] }
-        , Cmd.none
+        ( model
+        , closeDialog ""
         )
 
       CreateProjectResult (Err _) -> (model, Cmd.none)

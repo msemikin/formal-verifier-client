@@ -31,8 +31,8 @@ delta2builder previous current =
       ProfileRoute ->
         builder |> prependToPath [ "profile" ]
       
-      ProjectRoute ->
-        builder |> prependToPath [ "projects" ]
+      ProjectRoute projectId ->
+        builder |> prependToPath [ "projects", projectId ]
 
       NotFoundRoute ->
         builder |> prependToPath [ "notfound" ]
@@ -55,8 +55,12 @@ location2messages location =
           "profile" ->
             [ UpdateRoute ProfileRoute ]
           
-          "project" ->
-            [ UpdateRoute ProjectRoute ]
+          "projects" ->
+            case rest of
+              projectId :: _ ->
+                [ UpdateRoute <| ProjectRoute projectId ]
+              [] ->
+                [ UpdateRoute NotFoundRoute ]
           
           _ ->
             [ UpdateRoute NotFoundRoute ]

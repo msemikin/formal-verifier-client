@@ -2,8 +2,7 @@ module View exposing (view)
 
 import Material.Layout as Layout
 import Html exposing (..)
-import List exposing (head)
-import Maybe exposing (withDefault)
+import Dict
 
 import Messages exposing (Msg(..))
 import Model exposing (Model, PageData(..))
@@ -28,7 +27,7 @@ view model =
 
 
 page : Model -> Html Msg
-page { accessToken, currentRoute, pageData } =
+page { accessToken, currentRoute, pageData, projects, loadingProject } =
   case currentRoute of
     RegisterRoute ->
       case pageData of
@@ -45,13 +44,22 @@ page { accessToken, currentRoute, pageData } =
     ProfileRoute ->
       case pageData of
         ProfileData data ->
-          Html.map ProfileMsg (Profile.View.view data) 
+          Html.map ProfileMsg (Profile.View.view (Dict.values projects) data) 
         _ -> blankView <| toString pageData
     
-    ProjectRoute ->
+    ProjectRoute id ->
       case pageData of
         ProjectData data ->
-          Html.map ProjectMsg (Project.View.view data)
+          let
+            project = Dict.get id projects
+          in
+            case (project, loadingProject) of
+              (Just _, _) ->
+                Html.map ProjectMsg (Project.View.view project data)
+              (Nothing, True) ->
+                Html.map ProjectMsg (Project.View.view project data)
+              (Nothing, False) ->
+                blankView "Not found"
         _ -> blankView <| toString pageData
 
     NotFoundRoute -> blankView "Not found"

@@ -1,6 +1,8 @@
 module Model exposing (Model, PageData(..))
 
 import Material
+import Dict exposing (Dict)
+import Http
 
 import Types exposing (..)
 import Register.Types
@@ -20,4 +22,7 @@ type alias Model =
   , pageData : PageData
   , user : Maybe User
   , accessToken : Maybe String
+  , routeAfterLogin : Maybe Route
+  , projects : Dict String Project
+  , loadingProject : Bool
   }

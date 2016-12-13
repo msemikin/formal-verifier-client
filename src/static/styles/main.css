@@ -61,3 +61,11 @@
 .project-dialog {
   width: 500px;
 }
+
+.spinner-container {
+  flex: 1;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
