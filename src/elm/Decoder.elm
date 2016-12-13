@@ -5,8 +5,10 @@ import Json.Decode.Pipeline as DecodePipeline exposing (required, requiredAt)
 
 import Types exposing (..)
 
-modelDecoder : Decoder String
-modelDecoder = string
+modelDecoder : Decoder LTS
+modelDecoder =
+  DecodePipeline.decode LTS
+    |> required "name" string
 
 projectDecoder : Decoder Project
 projectDecoder =

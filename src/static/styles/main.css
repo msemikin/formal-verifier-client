@@ -3,6 +3,10 @@
   display: flex;
 }
 
+main.mdl-layout__content {
+  display: flex;
+}
+
 .title {
   margin: 0;
   display: inline-block;
@@ -18,6 +22,7 @@
 }
 
 .container {
+  flex: 1;
   padding-top: 50px;
 }
 
@@ -62,10 +67,44 @@
   width: 500px;
 }
 
+/* project page */
+
+.project-container {
+  flex: 1;
+  display: flex;
+}
+
+.project-container .mdl-grid {
+  flex: 1;
+}
+
 .spinner-container {
   flex: 1;
   height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.syntaxes-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.syntax-field {
+  width: 100%;
+  flex: 1;
+}
+
+.syntax-field:first-child {
+  margin-bottom: 5px;
+}
+.syntax-field:last-child {
+  margin-top: 5px;
+}
+
+.empty-project {
+  width: 100%;
+  padding: 100px;
+  text-align: center;
 }

@@ -21,4 +21,3 @@ type Msg =
   | AccessTokenResult String
   | SilentLoginResult (Result Http.Error User)
   | ProjectsResult (Result Http.Error (List Project))
-  | ProjectResult (Result Http.Error Project)

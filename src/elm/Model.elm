@@ -24,5 +24,4 @@ type alias Model =
   , accessToken : Maybe String
   , routeAfterLogin : Maybe Route
   , projects : Dict String Project
-  , loadingProject : Bool
   }

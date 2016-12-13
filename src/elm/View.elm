@@ -27,7 +27,7 @@ view model =
 
 
 page : Model -> Html Msg
-page { accessToken, currentRoute, pageData, projects, loadingProject } =
+page { accessToken, currentRoute, pageData, projects } =
   case currentRoute of
     RegisterRoute ->
       case pageData of
@@ -53,13 +53,7 @@ page { accessToken, currentRoute, pageData, projects, loadingProject } =
           let
             project = Dict.get id projects
           in
-            case (project, loadingProject) of
-              (Just _, _) ->
-                Html.map ProjectMsg (Project.View.view project data)
-              (Nothing, True) ->
-                Html.map ProjectMsg (Project.View.view project data)
-              (Nothing, False) ->
-                blankView "Not found"
+            Html.map ProjectMsg (Project.View.view project data)
         _ -> blankView <| toString pageData
 
     NotFoundRoute -> blankView "Not found"

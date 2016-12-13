@@ -19,7 +19,9 @@ type alias LoginResponse =
   , user : User
   }
 
-type alias LTS = String
+type alias LTS =
+  { name : String
+  }
 
 type alias Project =
   { id : String

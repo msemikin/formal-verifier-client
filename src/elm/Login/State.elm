@@ -1,6 +1,5 @@
 module Login.State exposing (init, update)
 
-import Debug
 import Material
 import Form exposing (Form)
 import Form.Validate as Validate exposing (..)

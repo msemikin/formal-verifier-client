@@ -25,14 +25,12 @@ init =
   let 
     model =
       { mdl = Material.model
-
       , currentRoute = LoginRoute
       , pageData = LoginData <| Tuple.first Login.State.init
       , user = Nothing
       , accessToken = Nothing
       , routeAfterLogin = Nothing
       , projects = Dict.empty
-      , loadingProject = False
       }
     
     effects = Cmd.batch
@@ -72,23 +70,18 @@ initPage model route =
         ( { model | pageData = RegisterData data }, Cmd.map RegisterMsg effect)
     
     ProjectRoute projectId ->
-      let
-        (data, effect) = Project.State.init
-        project = Dict.get projectId model.projects
-      in
-        case (project, model.accessToken) of
-          (Just _, _) ->
+      case model.accessToken of
+        Just accessToken ->
+          let
+            (data, effect) = Project.State.init project projectId accessToken
+            project = Dict.get projectId model.projects
+          in
             ( { model | pageData = ProjectData data }, Cmd.map ProjectMsg effect)
-          (Nothing, Just accessToken) ->
-            ( { model | pageData = ProjectData data, loadingProject = True }
-            , Cmd.batch
-              [ Cmd.map ProjectMsg effect
-              , fetchProject projectId accessToken
-              ]
-            )
-          _ -> (model, Cmd.none)
+
+        _ -> (model, Cmd.none)
 
     NotFoundRoute -> (model, Cmd.none)
+ 
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -143,31 +136,41 @@ update msg model =
         update (UpdateRoute route) model
 
       ProfileMsg (Profile.Types.CreateProjectResult (Ok project)) ->
-        ( { model | projects = Dict.insert project.id project model.projects }
-        , Cmd.none
-        )
+        let
+          updatedModel =
+            { model | projects = Dict.insert project.id project model.projects }
+        in
+          updateProfile (Profile.Types.CreateProjectResult (Ok project)) model
       
-      ProfileMsg msg ->
-        case model.pageData of
-          ProfileData data ->
-            let
-              (pageData, effect) =
-                case model.accessToken of
-                  Just accessToken -> Profile.State.update accessToken msg data
-                  Nothing -> (data, Cmd.none)
-            in
-              ({ model | pageData = ProfileData pageData }, Cmd.map ProfileMsg effect)
-
-          _ -> (model, Cmd.none)
+      ProfileMsg msg -> updateProfile msg model
       
-      ProjectMsg msg ->
-        case model.pageData of
-          ProjectData data ->
-            let
-              (pageData, effect) = Project.State.update msg data
-            in
-              ({ model | pageData = ProjectData pageData }, Cmd.map ProjectMsg effect)
-          _ -> (model, Cmd.none)
+      ProjectMsg (Project.Types.CreateModelResult (Ok newModel)) ->
+        let
+          updatedModel =
+            case model.currentRoute of
+              ProjectRoute projectId ->
+                { model |
+                  projects = Dict.update
+                    projectId
+                    (\model -> Maybe.map
+                      (\project -> { project | models = project.models ++ [newModel] })
+                      model
+                    )
+                    model.projects
+                }
+              _ -> model
+        in
+          updateProject (Project.Types.CreateModelResult (Ok newModel)) updatedModel
+      
+      ProjectMsg (Project.Types.ProjectResult (Ok project)) ->
+        let
+          updatedModel =
+            { model | projects = Dict.insert project.id project model.projects
+            }
+        in
+          updateProject (Project.Types.ProjectResult (Ok project)) updatedModel
+      
+      ProjectMsg msg -> updateProject msg model
       
       AccessTokenResult accessToken ->
         case accessToken of
@@ -192,15 +195,6 @@ update msg model =
       
       ProjectsResult (Err _) ->
         (model, Cmd.none)
-
-      ProjectResult (Ok project) ->
-        ( { model | projects = Dict.insert project.id project model.projects
-          , loadingProject = False
-          }
-        , Cmd.none
-        )
-      
-      ProjectResult (Err _) -> ( { model | loadingProject = False }, Cmd.none )
 
 
 updateRoute : Route -> Model -> (Model, Cmd Msg)
@@ -230,6 +224,33 @@ updateRoute route model =
             ProfileRoute -> requireLogin ()
             ProjectRoute _ -> requireLogin ()
             _ -> proceedToPage
+
+
+updateProject : Project.Types.Msg -> Model -> (Model, Cmd Msg)
+updateProject msg model =
+  case model.pageData of
+    ProjectData data ->
+      let
+        (pageData, effect) =
+          Project.State.update msg data
+      in
+        ({ model | pageData = ProjectData pageData }, Cmd.map ProjectMsg effect)
+    _ -> (model, Cmd.none)
+
+
+updateProfile : Profile.Types.Msg -> Model -> (Model, Cmd Msg)
+updateProfile msg model =
+  case model.pageData of
+    ProfileData data ->
+      let
+        (pageData, effect) =
+          case model.accessToken of
+            Just accessToken -> Profile.State.update accessToken msg data
+            Nothing -> (data, Cmd.none)
+      in
+        ({ model | pageData = ProfileData pageData }, Cmd.map ProfileMsg effect)
+
+    _ -> (model, Cmd.none)
 
 
 subscriptions : Model -> Sub Msg

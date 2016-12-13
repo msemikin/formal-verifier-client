@@ -33,16 +33,3 @@ fetchProjects accessToken =
       }
   in
     Http.send ProjectsResult request
-
-fetchProject : String -> String -> Cmd Msg
-fetchProject id accessToken=
-  let
-    request = Helpers.Rest.secureRequest
-      { url = apiUrl ++ "/projects/" ++ id
-      , body = Http.emptyBody
-      , decoder = projectDecoder
-      , method = "GET"
-      , accessToken = accessToken
-      }
-  in
-    Http.send ProjectResult request

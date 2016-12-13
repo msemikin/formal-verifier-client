@@ -7,7 +7,7 @@ import Material
 import Maybe
 
 import Profile.Types as Types exposing (..)
-import Profile.CloseDialog exposing (..)
+import CloseDialog exposing (..)
 import Profile.Rest exposing (..)
 
 validate : Validation () ProjectForm
