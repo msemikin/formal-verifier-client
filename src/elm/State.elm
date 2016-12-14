@@ -4,7 +4,8 @@ import Debug
 import Material
 import Maybe
 import Platform.Cmd as Cmd
-import Dict
+import Dict exposing (Dict)
+import Array
 
 import Model exposing (Model, PageData(..))
 import Types exposing (..)
@@ -83,6 +84,16 @@ initPage model route =
     NotFoundRoute -> (model, Cmd.none)
  
 
+insertModelInProject : String -> LTS -> Dict String Project -> Dict String Project
+insertModelInProject projectId lts projects =
+  Dict.update
+    projectId
+    (\model -> Maybe.map
+      (\project -> { project | models = Dict.insert lts.name lts project.models })
+      model
+    )
+    projects
+
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -149,15 +160,7 @@ update msg model =
           updatedModel =
             case model.currentRoute of
               ProjectRoute projectId ->
-                { model |
-                  projects = Dict.update
-                    projectId
-                    (\model -> Maybe.map
-                      (\project -> { project | models = project.models ++ [newModel] })
-                      model
-                    )
-                    model.projects
-                }
+                { model | projects = insertModelInProject projectId newModel model.projects }
               _ -> model
         in
           updateProject (Project.Types.CreateModelResult (Ok newModel)) updatedModel
@@ -165,13 +168,23 @@ update msg model =
       ProjectMsg (Project.Types.ProjectResult (Ok project)) ->
         let
           updatedModel =
-            { model | projects = Dict.insert project.id project model.projects
-            }
+            { model | projects = Dict.insert project.id project model.projects }
         in
           updateProject (Project.Types.ProjectResult (Ok project)) updatedModel
       
-      ProjectMsg msg -> updateProject msg model
+      ProjectMsg (Project.Types.UpdateModelResult (Ok updatedLTS)) ->
+        let
+          updatedModel =
+            case model.currentRoute of
+              ProjectRoute projectId ->
+                { model | projects = insertModelInProject projectId updatedLTS model.projects }
+              _ -> model
+        in
+          updateProject (Project.Types.UpdateModelResult (Ok updatedLTS)) updatedModel
+
       
+      ProjectMsg msg -> updateProject msg model
+
       AccessTokenResult accessToken ->
         case accessToken of
           "" -> (model, Cmd.none)

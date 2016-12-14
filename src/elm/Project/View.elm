@@ -1,5 +1,6 @@
 module Project.View exposing (view)
 
+import Dict
 import Form exposing (Form)
 import Html exposing (..)
 import Html.Attributes exposing (class)
@@ -22,8 +23,8 @@ view project { modelForm, mdl } =
     Just project ->
       div [ class "project-container" ]
         [ createModelDialog modelForm mdl
-        , case project.models of
-            [] -> 
+        , if Dict.size project.models == 0
+            then
               div [ class "empty-project" ]
                 [ p [] [ text "You should create your first model" ]
                 , Button.render Mdl [0] mdl
@@ -34,13 +35,25 @@ view project { modelForm, mdl } =
                   ]
                   [ text "Create model"]
                 ]
-            _ ->
+            else
               div [ class "mdl-grid" ]
                 [ Options.div
                   [ cs "mdl-cell mdl-cell--2-col"
                   , Elevation.e2
                   ]
-                  [ List.ul [] <| List.map model project.models ]
+                  [ h5 [ class "list-header" ] [ text "Models" ]
+                  , List.ul [] <|
+                      (List.map model <| Dict.values project.models) ++
+                        [ List.li
+                          [ cs "list-item--separated" ]
+                          [ List.content
+                            [ Dialog.openOn "click" ]
+                            [ List.icon "add" []
+                            , text "Create new..."
+                            ]
+                          ]
+                        ]
+                  ]
 
                 , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
                   [ Options.div
@@ -67,12 +80,9 @@ view project { modelForm, mdl } =
 model : LTS -> Html Msg
 model { name } =
   List.li
-    [ cs "list-item"
-    ]
-    [ List.content
-      [ ]
-      [ text name
-      ]
+    [ ]
+    [ List.content []
+      [ text name ]
     ]
 
 createModelDialog : Form e o -> Material.Model -> Html Msg

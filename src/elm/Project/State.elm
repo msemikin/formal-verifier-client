@@ -3,6 +3,7 @@ module Project.State exposing (..)
 import Material
 import Form exposing (Form)
 import Form.Validate as Validate exposing (..)
+import Dict
 
 import Types exposing (..)
 import Project.Types exposing (..)
@@ -60,7 +61,7 @@ update msg model =
 
       ProjectResult (Ok { models }) ->
         ( { model |
-            currentModelIndex = if List.length models > 0
+            currentModelIndex = if Dict.size models > 0
               then Just 0
               else Nothing
           }
@@ -68,4 +69,8 @@ update msg model =
         )
      
       ProjectResult (Err _) -> ( model, Cmd.none )
+
+      UpdateModelResult _ -> ( model, Cmd.none )
+        
+
      

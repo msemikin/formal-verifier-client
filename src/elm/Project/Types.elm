@@ -24,3 +24,4 @@ type Msg =
   | CreateModel Form.Msg
   | CreateModelResult (Result Http.Error LTS)
   | ProjectResult (Result Http.Error Project)
+  | UpdateModelResult (Result Http.Error LTS)

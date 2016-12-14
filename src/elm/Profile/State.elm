@@ -2,7 +2,6 @@ module Profile.State exposing (init, update)
 
 import Form exposing (Form)
 import Form.Validate as Validate exposing (..)
-import Debug
 import Material
 import Maybe
 

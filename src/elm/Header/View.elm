@@ -1,6 +1,5 @@
 module Header.View exposing (view)
 
-import Debug
 import Html exposing (..)
 import Material.Button as Button
 import Html.Attributes exposing (href, class, style)

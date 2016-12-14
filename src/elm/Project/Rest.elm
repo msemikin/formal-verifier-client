@@ -2,6 +2,7 @@ module Project.Rest exposing (..)
 
 import Http
 import Json.Encode as Encode
+import Json.Decode as Decode
 
 import Project.Types exposing (..)
 import Helpers.Rest
@@ -24,6 +25,26 @@ createModel projectId { name } accessToken =
       }
   in
     Http.send CreateModelResult request
+
+
+updateModel : String -> String -> String -> Cmd Msg
+updateModel projectId modelSource accessToken =
+  let
+    data = Encode.object
+      [ ("model_source", Encode.string modelSource)
+      ]
+    
+    request = Helpers.Rest.secureRequest
+      { url = apiUrl ++ "/projects/" ++ projectId ++ "/models"
+      , body = Http.jsonBody data
+      , decoder = modelDecoder
+      , method = "PUT"
+      , accessToken = accessToken
+      }
+  in
+    Http.send UpdateModelResult request
+
+
 
 fetchProject : String -> String -> Cmd Msg
 fetchProject id accessToken=

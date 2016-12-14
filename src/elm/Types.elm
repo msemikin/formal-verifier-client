@@ -1,5 +1,7 @@
 module Types exposing (..)
 
+import Dict exposing (Dict)
+
 type Route =
     RegisterRoute
   | LoginRoute
@@ -21,11 +23,12 @@ type alias LoginResponse =
 
 type alias LTS =
   { name : String
+  , graph : String
   }
 
 type alias Project =
   { id : String
   , name : String
   , description : String
-  , models : List LTS
+  , models : Dict String LTS
   }

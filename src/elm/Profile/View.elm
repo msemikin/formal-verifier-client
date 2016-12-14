@@ -10,7 +10,7 @@ import Material.Badge as Badge
 import Material.Button as Button
 import Material.Icon as Icon
 import Material.Dialog as Dialog
-import List
+import Dict
 
 import Profile.Types exposing (Model, Msg(..))
 import Types exposing (Project, Route(..))
@@ -53,7 +53,7 @@ project { id, name, description, models } =
       , List.subtitle []
         [ text description ]
       ]
-    , countBadge <| List.length models
+    , countBadge <| Dict.size models
     ]
 
 countBadge : Int -> Html Msg
