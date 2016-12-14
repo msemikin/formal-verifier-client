@@ -176,6 +176,7 @@ main.mdl-layout__content {
   flex: 1;
   display: flex;
   overflow: auto;
+  flex-direction: column;
 }
 
 .formulas-list .mdl-list {
@@ -186,4 +187,10 @@ main.mdl-layout__content {
   text-align: right;
   padding: 20px;
   border-top: 1px solid #E0E0E0;
+}
+
+.no-formulas {
+  text-align: center;
+  margin: 0;
+  padding: 20px;
 }

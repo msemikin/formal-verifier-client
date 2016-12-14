@@ -12,6 +12,7 @@ modelDecoder =
     |> required "name" string
     |> required "graph" string
     |> required "source" string
+    |> required "formulas" (list string)
 
 projectDecoder : Decoder Project
 projectDecoder =

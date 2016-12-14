@@ -25,6 +25,7 @@ type alias LTS =
   { name : String
   , graph : String
   , source : String
+  , formulas : List String
   }
 
 type alias Project =

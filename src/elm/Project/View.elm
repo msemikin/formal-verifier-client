@@ -22,11 +22,13 @@ import Project.Types exposing (..)
 import Helpers.Form as FormHelpers
 
 view : Maybe Project -> Model -> Html Msg
-view project { diagram, currentModelName, modelForm, mdl } =
+view project { diagram, currentModelName, modelForm, formulaForm, mdl, currentDialog } =
   case project of
     Just project ->
       div [ class "project-container" ]
-        [ createModelDialog modelForm mdl
+        [ case currentDialog of
+            ModelDialog -> createModelDialog modelForm mdl
+            FormulaDialog -> createFormulaDialog formulaForm mdl
         , case currentModelName of
             Nothing ->
               div [ class "empty-project" ]
@@ -35,7 +37,7 @@ view project { diagram, currentModelName, modelForm, mdl } =
                   [ Button.raised
                   , Button.colored
                   , Button.ripple
-                  , Dialog.openOn "click"
+                  , Button.onClick OpenModelDialog
                   ]
                   [ text "Create model"]
                 ]
@@ -46,7 +48,7 @@ view project { diagram, currentModelName, modelForm, mdl } =
                     [ modelsList currentModelName project mdl
                     , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
                       [ modelEditor currentModel mdl
-                      , formulasEditor mdl
+                      , formulasEditor mdl currentModel.formulas
                       ]
                     , modelGraph diagram
                     ]
@@ -73,44 +75,53 @@ modelEditor lts mdl =
         , Textfield.value lts.source
         ]
       ]
+    , div [ class "formulas-footer" ]
+      [ Button.render Mdl [1] mdl
+        [ Button.raised
+        , Button.colored
+        , Button.ripple
+        ]
+        [ text "Save"]
+      ]
     ]
 
 
-formulasEditor : Material.Model -> Html Msg
-formulasEditor mdl =
-  let
-    formulas = ["First formula", "Second formula", "Third formula", "Fourth formula"]
-  in
-    Options.div
-      [ cs "syntax-field"
-      , Elevation.e2
-      ]
-      [ h6 [ class "subheader" ] [ text "Formulas" ]
-      , div [ class "formulas-list" ]
-        [ (List.ul [] <| List.indexedMap (formulaListItem mdl) formulas ++
-          [ List.li
-            [ cs "list-item list-item--separated"]
-            [ List.content
-              [ Dialog.openOn "click" ]
-              [ List.icon "add" []
-              , text "Create new..."
-              ]
-            ]
-          ])
-        ]
-      , div [ class "formulas-footer" ]
-        [ Button.render Mdl [2] mdl
-          [ Button.raised
-          , Button.colored
-          , Button.ripple
+formulasEditor : Material.Model -> List String -> Html Msg
+formulasEditor mdl formulas =
+  Options.div
+    [ cs "syntax-field"
+    , Elevation.e2
+    ]
+    [ h6 [ class "subheader" ] [ text "Formulas" ]
+    , div [ class "formulas-list" ]
+      [ if List.length formulas == 0
+          then p [ class "no-formulas" ] [ text "No formulas added yet!" ]
+          else div [] []
+      , (List.ul [] <| List.indexedMap (formulaListItem mdl) formulas ++
+        [ List.li
+          [ cs "list-item list-item--separated"
+          , Options.attribute <| Html.Events.onClick OpenFormulaDialog
           ]
-          [ text "Run"]
-        ]
+          [ List.content []
+            [ List.icon "add" []
+            , text "Add new..."
+            ]
+          ]
+        ])
       ]
+    , div [ class "formulas-footer" ]
+      [ Button.render Mdl [2] mdl
+        [ Button.raised
+        , Button.colored
+        , Button.ripple
+        ]
+        [ text "Run"]
+      ]
+    ]
 
 formulaListItem : Material.Model -> Int -> String -> Html Msg
 formulaListItem mdl index formula =
-  List.li []
+  List.li [ cs "list-item" ]
     [ List.content []
       [ List.icon "check" [ Color.text (Color.color Color.Green Color.S500)]
       , text formula
@@ -121,7 +132,7 @@ formulaListItem mdl index formula =
 
 editFormula : Material.Model -> Int -> Html Msg
 editFormula mdl index =
-  Button.render Mdl [10 + index] mdl
+  Button.render Mdl [10000 + index] mdl
     [ Button.icon 
     ]
     [ Icon.i "edit" ] 
@@ -151,9 +162,10 @@ modelsList selectedModelName project mdl =
     , List.ul [] <|
         (List.map (modelListItem selectedModelName) <| Dict.values project.models) ++
           [ List.li
-            [ cs "list-item list-item--separated"]
-            [ List.content
-              [ Dialog.openOn "click" ]
+            [ cs "list-item list-item--separated"
+            , Options.attribute <| Html.Events.onClick OpenModelDialog
+            ]
+            [ List.content []
               [ List.icon "add" []
               , text "Create new..."
               ]
@@ -178,7 +190,7 @@ createModelDialog form mdl =
   let
     getField = FormHelpers.getField form
     getFieldValue = FormHelpers.getFieldValue form
-    connectField = FormHelpers.connectField FormMsg form
+    connectField = FormHelpers.connectField ModelFormMsg form
     getError = FormHelpers.getError form
   in
     Dialog.view []
@@ -194,12 +206,44 @@ createModelDialog form mdl =
           ]
         ]
       , Dialog.actions []
-        [ Button.render Mdl [1] mdl
+        [ Button.render Mdl [3] mdl
           [ Button.colored
           , Button.onClick <| CreateModel Form.Submit
           ]
           [ text "Create" ]
-        , Button.render Mdl [0] mdl
+        , Button.render Mdl [4] mdl
+          [ Dialog.closeOn "click" ]
+          [ text "Close" ]
+        ]
+      ]
+
+createFormulaDialog : Form e o -> Material.Model -> Html Msg
+createFormulaDialog form mdl =
+  let
+    getField = FormHelpers.getField form
+    getFieldValue = FormHelpers.getFieldValue form
+    connectField = FormHelpers.connectField FormulaFormMsg form
+    getError = FormHelpers.getError form
+  in
+    Dialog.view []
+      [ Dialog.title [] [ text "New formula" ]
+      , Dialog.content []
+        [ div []
+          [ Textfield.render Mdl [0] mdl
+            ([ Textfield.label "Content"
+            , Textfield.floatingLabel
+            , cs "field"
+            , getError "content" "Content is required"
+            ] ++ connectField "content")
+          ]
+        ]
+      , Dialog.actions []
+        [ Button.render Mdl [5] mdl
+          [ Button.colored
+          , Button.onClick <| AddFormula Form.Submit
+          ]
+          [ text "Create" ]
+        , Button.render Mdl [6] mdl
           [ Dialog.closeOn "click" ]
           [ text "Close" ]
         ]

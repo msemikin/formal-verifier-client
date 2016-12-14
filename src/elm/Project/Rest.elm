@@ -27,18 +27,35 @@ createModel projectId { name } accessToken =
     Http.send CreateModelResult request
 
 
-updateModel : String -> String -> String -> Cmd Msg
-updateModel projectId modelSource accessToken =
+updateModel : String -> String -> String -> String -> Cmd Msg
+updateModel projectId modelName modelSource accessToken =
   let
     data = Encode.object
       [ ("source", Encode.string modelSource)
       ]
     
     request = Helpers.Rest.secureRequest
-      { url = apiUrl ++ "/projects/" ++ projectId ++ "/models"
+      { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelName
       , body = Http.jsonBody data
       , decoder = modelDecoder
       , method = "PUT"
+      , accessToken = accessToken
+      }
+  in
+    Http.send UpdateModelResult request
+ 
+
+patchModel : String -> String -> List String -> String -> Cmd Msg
+patchModel projectId modelName formulas accessToken =
+  let
+    data = Encode.object
+      [ ("formulas", Encode.list <| List.map Encode.string formulas)]
+
+    request = Helpers.Rest.secureRequest
+      { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelName
+      , body = Http.jsonBody data
+      , decoder = modelDecoder
+      , method = "PATCH"
       , accessToken = accessToken
       }
   in

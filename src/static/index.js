@@ -20,6 +20,13 @@ app.ports.read.subscribe(function (key) {
   app.ports.readResult.send(data || '');
 });
 
+app.ports.openDialog.subscribe(function () {
+  var dialog = document.querySelector('dialog');
+  setTimeout(function () {
+    dialog.showModal();
+  }, 0);
+});
+
 app.ports.closeDialog.subscribe(function () {
   var dialog = document.querySelector('dialog');
   dialog.close();
