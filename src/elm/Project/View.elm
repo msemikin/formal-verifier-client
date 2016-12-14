@@ -13,6 +13,8 @@ import Material.List as List
 import Material.Button as Button
 import Material.Dialog as Dialog
 import Material.Textfield as Textfield
+import Material.Icon as Icon
+import Material.Color as Color
 import Json.Encode
 
 import Types exposing (..)
@@ -44,7 +46,7 @@ view project { diagram, currentModelName, modelForm, mdl } =
                     [ modelsList currentModelName project mdl
                     , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
                       [ modelEditor currentModel mdl
-                      , formulasEditor
+                      , formulasEditor mdl
                       ]
                     , modelGraph diagram
                     ]
@@ -63,13 +65,66 @@ modelEditor lts mdl =
     [ cs "syntax-field"
     , Elevation.e2
     ]
-    [ Textfield.render Mdl [0] mdl
-      [ Textfield.label "Model definition"
-      , Textfield.floatingLabel
-      , Textfield.textarea
-      , Textfield.value lts.source
+    [ h6 [ class "subheader" ] [ text "Model definition" ]
+    , div [ class "model-editor" ]
+      [ Textfield.render Mdl [1] mdl
+        [ cs "model-textfield"
+        , Textfield.textarea
+        , Textfield.value lts.source
+        ]
       ]
     ]
+
+
+formulasEditor : Material.Model -> Html Msg
+formulasEditor mdl =
+  let
+    formulas = ["First formula", "Second formula", "Third formula", "Fourth formula"]
+  in
+    Options.div
+      [ cs "syntax-field"
+      , Elevation.e2
+      ]
+      [ h6 [ class "subheader" ] [ text "Formulas" ]
+      , div [ class "formulas-list" ]
+        [ (List.ul [] <| List.indexedMap (formulaListItem mdl) formulas ++
+          [ List.li
+            [ cs "list-item list-item--separated"]
+            [ List.content
+              [ Dialog.openOn "click" ]
+              [ List.icon "add" []
+              , text "Create new..."
+              ]
+            ]
+          ])
+        ]
+      , div [ class "formulas-footer" ]
+        [ Button.render Mdl [2] mdl
+          [ Button.raised
+          , Button.colored
+          , Button.ripple
+          ]
+          [ text "Run"]
+        ]
+      ]
+
+formulaListItem : Material.Model -> Int -> String -> Html Msg
+formulaListItem mdl index formula =
+  List.li []
+    [ List.content []
+      [ List.icon "check" [ Color.text (Color.color Color.Green Color.S500)]
+      , text formula
+      ]
+    , editFormula mdl index
+    ]
+
+
+editFormula : Material.Model -> Int -> Html Msg
+editFormula mdl index =
+  Button.render Mdl [10 + index] mdl
+    [ Button.icon 
+    ]
+    [ Icon.i "edit" ] 
 
 
 modelGraph : Maybe String -> Html Msg
@@ -84,14 +139,6 @@ modelGraph diagram =
           []
         Nothing -> div [] []
     ]
-
-formulasEditor : Html Msg
-formulasEditor =
-  Options.div
-    [ cs "syntax-field"
-    , Elevation.e2
-    ]
-    []
 
 
 modelsList : String -> Project -> Material.Model -> Html Msg
@@ -138,7 +185,7 @@ createModelDialog form mdl =
       [ Dialog.title [] [ text "New model" ]
       , Dialog.content []
         [ div []
-          [ Textfield.render Mdl [3] mdl
+          [ Textfield.render Mdl [0] mdl
             ([ Textfield.label "Name"
             , Textfield.floatingLabel
             , cs "field"

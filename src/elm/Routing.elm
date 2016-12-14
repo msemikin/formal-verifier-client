@@ -18,24 +18,21 @@ delta2url previous current =
 
 delta2builder : Model -> Model -> Builder
 delta2builder previous current =
-  let
-    _ = Debug.log "in delta2builder" (toString current.currentRoute)
-  in
-    case current.currentRoute of
-      RegisterRoute ->
-        builder |> prependToPath [ "register" ]
-      
-      LoginRoute ->
-        builder |> prependToPath [ "login" ]
-      
-      ProfileRoute ->
-        builder |> prependToPath [ "profile" ]
-      
-      ProjectRoute projectId ->
-        builder |> prependToPath [ "projects", projectId ]
+  case current.currentRoute of
+    RegisterRoute ->
+      builder |> prependToPath [ "register" ]
+    
+    LoginRoute ->
+      builder |> prependToPath [ "login" ]
+    
+    ProfileRoute ->
+      builder |> prependToPath [ "profile" ]
+    
+    ProjectRoute projectId ->
+      builder |> prependToPath [ "projects", projectId ]
 
-      NotFoundRoute ->
-        builder |> prependToPath [ "notfound" ]
+    NotFoundRoute ->
+      builder |> prependToPath [ "notfound" ]
 
 
 location2messages : Location -> List Msg

@@ -76,6 +76,7 @@ initPage model route =
           let
             (data, effect) = Project.State.init project projectId accessToken
             project = Dict.get projectId model.projects
+            _ = Debug.log "state initPage" <| toString effect
           in
             ( { model | pageData = ProjectData data }, Cmd.map ProjectMsg effect)
 
@@ -269,11 +270,8 @@ updateProfile msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  let
-    parentSubscription = readResult AccessTokenResult
-  in
-    case model.pageData of
-      ProjectData data ->
-        Sub.batch [ parentSubscription, Sub.map ProjectMsg (Project.State.subscriptions data) ]
-      _ -> parentSubscription
+  Sub.batch
+  [ readResult AccessTokenResult
+  , Sub.map ProjectMsg Project.State.subscriptions
+  ]
 

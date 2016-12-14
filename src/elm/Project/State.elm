@@ -1,5 +1,6 @@
 module Project.State exposing (..)
 
+import Debug
 import Material
 import Form exposing (Form)
 import Form.Validate as Validate exposing (..)
@@ -34,6 +35,7 @@ init project projectId accessToken =
               (Cmd.none, Nothing)
         Nothing ->
           (fetchProject projectId accessToken, Nothing)
+    _ = Debug.log "effect" <| toString effect
   in
     ( { mdl = Material.model
       , modelForm = Form.initial [] validate
@@ -95,6 +97,6 @@ update project msg model =
         ( { model | diagram = Just diagram } , Cmd.none )
         
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions : Sub Msg
+subscriptions =
   Graphviz.diagramResult DiagramGenerated
