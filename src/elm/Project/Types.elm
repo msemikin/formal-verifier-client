@@ -16,6 +16,7 @@ type alias Model =
   , currentModelName : Maybe String
   , projectId : String
   , accessToken : String
+  , diagram : Maybe String
   }
 
 type Msg =
@@ -26,3 +27,4 @@ type Msg =
   | ProjectResult (Result Http.Error Project)
   | UpdateModelResult (Result Http.Error LTS)
   | SelectModel String
+  | DiagramGenerated String

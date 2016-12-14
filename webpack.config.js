@@ -45,6 +45,10 @@ var commonConfig = {
 
   postcss: [ autoprefixer( { browsers: ['last 2 versions'] } ) ],
 
+  node: {
+    fs: "empty"
+  }
+
 }
 
 // additional webpack settings for local env (when invoked by 'npm start')

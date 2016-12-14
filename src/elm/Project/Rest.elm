@@ -31,7 +31,7 @@ updateModel : String -> String -> String -> Cmd Msg
 updateModel projectId modelSource accessToken =
   let
     data = Encode.object
-      [ ("model_source", Encode.string modelSource)
+      [ ("source", Encode.string modelSource)
       ]
     
     request = Helpers.Rest.secureRequest

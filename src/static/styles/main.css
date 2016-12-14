@@ -53,7 +53,25 @@ main.mdl-layout__content {
   padding-left: 16px;
 }
 
-.list-item:not(:last-child) {
+.list-item {
+  cursor: pointer;
+  transition: all .2s ease-out;
+}
+
+.list-item:hover, list-item--selected:hover {
+  background-color: #F5F5F5;
+}
+
+.list-item--selected {
+  background-color: #EEEEEE;
+}
+
+.list-item--separated {
+  margin-top: 10px;
+  border-top: 1px solid lightgrey;
+}
+
+.list-item--divided:not(:last-child) {
   border-bottom: 1px solid lightgrey;
 }
 
@@ -95,6 +113,7 @@ main.mdl-layout__content {
   width: 100%;
   flex: 1;
   padding: 16px;
+  box-sizing: border-box;
 }
 
 .syntax-field:first-child {
@@ -120,17 +139,20 @@ main.mdl-layout__content {
   text-align: center;
 }
 
-.list-item--separated {
-  margin-top: 10px;
-  border-top: 1px solid lightgrey;
-}
-
-.list-item--selected {
-  background-color: #F5F5F5;
-}
-
 .list-header {
   color: #3f51b5;
   margin-left: 16px;
   margin-bottom: 0;
+}
+
+.model-graph {
+  flex: 1;
+  display: flex;
+  overflow: auto;
+}
+
+.model-graph > div {
+  /*min-width: min-content;*/
+  flex: 1;
+  display: flex;
 }

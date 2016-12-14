@@ -241,11 +241,12 @@ updateRoute route model =
 
 updateProject : Project.Types.Msg -> Model -> (Model, Cmd Msg)
 updateProject msg model =
-  case model.pageData of
-    ProjectData data ->
+  case (model.pageData, model.currentRoute) of
+    (ProjectData data, ProjectRoute projectId) ->
       let
+        project = Dict.get projectId model.projects
         (pageData, effect) =
-          Project.State.update msg data
+          Project.State.update project msg data
       in
         ({ model | pageData = ProjectData pageData }, Cmd.map ProjectMsg effect)
     _ -> (model, Cmd.none)
@@ -268,5 +269,11 @@ updateProfile msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  readResult AccessTokenResult
+  let
+    parentSubscription = readResult AccessTokenResult
+  in
+    case model.pageData of
+      ProjectData data ->
+        Sub.batch [ parentSubscription, Sub.map ProjectMsg (Project.State.subscriptions data) ]
+      _ -> parentSubscription
 

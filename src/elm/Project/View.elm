@@ -4,7 +4,7 @@ import Dict
 import Form exposing (Form)
 import Html exposing (..)
 import Html.Events
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (..)
 import Material
 import Material.Spinner as Loading
 import Material.Options as Options exposing (cs, css)
@@ -13,19 +13,20 @@ import Material.List as List
 import Material.Button as Button
 import Material.Dialog as Dialog
 import Material.Textfield as Textfield
+import Json.Encode
 
 import Types exposing (..)
 import Project.Types exposing (..)
 import Helpers.Form as FormHelpers
 
 view : Maybe Project -> Model -> Html Msg
-view project { currentModelName, modelForm, mdl } =
+view project { diagram, currentModelName, modelForm, mdl } =
   case project of
     Just project ->
       div [ class "project-container" ]
         [ createModelDialog modelForm mdl
-        , if Dict.size project.models == 0
-            then
+        , case currentModelName of
+            Nothing ->
               div [ class "empty-project" ]
                 [ p [] [ text "You should create your first model" ]
                 , Button.render Mdl [0] mdl
@@ -36,14 +37,18 @@ view project { currentModelName, modelForm, mdl } =
                   ]
                   [ text "Create model"]
                 ]
-            else
-              div [ class "mdl-grid" ]
-                [ modelsList (Maybe.withDefault "" currentModelName) project mdl
-                , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
-                  [ modelEditor mdl
-                  , formulasEditor
-                  ]
-                ]
+            Just currentModelName ->
+              case Dict.get currentModelName project.models of
+                Just currentModel ->
+                  div [ class "mdl-grid" ]
+                    [ modelsList currentModelName project mdl
+                    , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
+                      [ modelEditor currentModel mdl
+                      , formulasEditor
+                      ]
+                    , modelGraph diagram
+                    ]
+                Nothing -> div [] []
           ]
 
     Nothing ->
@@ -52,8 +57,8 @@ view project { currentModelName, modelForm, mdl } =
         ]
 
 
-modelEditor : Material.Model -> Html Msg
-modelEditor mdl =
+modelEditor : LTS -> Material.Model -> Html Msg
+modelEditor lts mdl =
   Options.div
     [ cs "syntax-field"
     , Elevation.e2
@@ -62,9 +67,23 @@ modelEditor mdl =
       [ Textfield.label "Model definition"
       , Textfield.floatingLabel
       , Textfield.textarea
+      , Textfield.value lts.source
       ]
     ]
 
+
+modelGraph : Maybe String -> Html Msg
+modelGraph diagram =
+  Options.div
+    [ cs "mdl-cell mdl-cell--4-col model-graph"
+    , Elevation.e2
+    ]
+    [ case diagram of
+        Just diagram ->
+          div [ Html.Attributes.property "innerHTML" (Json.Encode.string diagram) ]
+          []
+        Nothing -> div [] []
+    ]
 
 formulasEditor : Html Msg
 formulasEditor =
@@ -85,7 +104,7 @@ modelsList selectedModelName project mdl =
     , List.ul [] <|
         (List.map (modelListItem selectedModelName) <| Dict.values project.models) ++
           [ List.li
-            [ cs "list-item--separated"]
+            [ cs "list-item list-item--separated"]
             [ List.content
               [ Dialog.openOn "click" ]
               [ List.icon "add" []
@@ -98,9 +117,12 @@ modelsList selectedModelName project mdl =
 modelListItem : String -> LTS -> Html Msg
 modelListItem selectedModelName { name } =
   List.li
-    (if selectedModelName == name then [ cs "list-item--selected" ] else [])
+    [ cs <| String.join " " <|
+        ["list-item"] ++ (if selectedModelName == name then ["list-item--selected"] else [])
+    , Options.attribute <| Html.Events.onClick (SelectModel name) 
+    ]
     [ List.content
-      [ Options.attribute <| Html.Events.onClick (SelectModel name) ]
+      []
       [ text name ]
     ]
 

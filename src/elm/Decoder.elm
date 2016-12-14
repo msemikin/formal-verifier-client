@@ -11,6 +11,7 @@ modelDecoder =
   DecodePipeline.decode LTS
     |> required "name" string
     |> required "graph" string
+    |> required "source" string
 
 projectDecoder : Decoder Project
 projectDecoder =

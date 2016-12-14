@@ -1,5 +1,6 @@
 // pull in desired CSS/SASS files
 require( './styles/main.css' );
+Viz = require('viz.js');
 
 // inject bundled Elm app into div#main
 var Elm = require( '../elm/Main' );
@@ -22,4 +23,9 @@ app.ports.read.subscribe(function (key) {
 app.ports.closeDialog.subscribe(function () {
   var dialog = document.querySelector('dialog');
   dialog.close();
+});
+
+app.ports.generateDiagram.subscribe(function (src) {
+  var diagram = Viz(src);
+  app.ports.diagramResult.send(diagram);
 });

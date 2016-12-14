@@ -2,7 +2,6 @@ module Model exposing (Model, PageData(..))
 
 import Material
 import Dict exposing (Dict)
-import Http
 
 import Types exposing (..)
 import Register.Types

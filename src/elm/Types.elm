@@ -24,6 +24,7 @@ type alias LoginResponse =
 type alias LTS =
   { name : String
   , graph : String
+  , source : String
   }
 
 type alias Project =

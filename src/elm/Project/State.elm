@@ -9,38 +9,45 @@ import Types exposing (..)
 import Project.Types exposing (..)
 import Project.Rest exposing (..)
 import CloseDialog exposing (..)
+import Graphviz
 
 validate : Validation () ModelForm
 validate =
   map ModelForm (field "name" string)
 
 
-getFirstModelName : Project -> Maybe String
-getFirstModelName project =
+getFirstModel : Project -> Maybe LTS
+getFirstModel project =
   Dict.values project.models
     |> List.head
-    |> Maybe.map .name
 
 init : Maybe Project -> String -> String -> (Model, Cmd Msg)
 init project projectId accessToken =
   let
-    (currentModelName, loadingProject, effect) =
+    (effect, currentModelName) =
       case project of
-        Nothing -> (Nothing, True, fetchProject projectId accessToken)
-        Just project -> (getFirstModelName project, False, Cmd.none)
+        Just project ->
+          case getFirstModel project of
+            Just model ->
+              (Graphviz.generateDiagram model.graph, Just model.name)
+            Nothing -> 
+              (Cmd.none, Nothing)
+        Nothing ->
+          (fetchProject projectId accessToken, Nothing)
   in
     ( { mdl = Material.model
       , modelForm = Form.initial [] validate
       , currentModelName = currentModelName
       , projectId = projectId
       , accessToken = accessToken
+      , diagram = Nothing
       }
     , effect
     )
+          
 
-
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg model =
+update : Maybe Project -> Msg -> Model -> (Model, Cmd Msg)
+update project msg model =
   let
     updateForm formMsg =
       { model | modelForm = Form.update formMsg model.modelForm }
@@ -67,17 +74,27 @@ update msg model =
       CreateModelResult (Err _) -> (model, Cmd.none)
 
       ProjectResult (Ok project) ->
-        ( { model |
-            currentModelName = getFirstModelName project
-          }
-        , Cmd.none
-        )
+        case getFirstModel project of
+          Just { name } -> update (Just project) (SelectModel name) model
+          Nothing -> 
+            ( { model | currentModelName = Nothing } , Cmd.none )
      
       ProjectResult (Err _) -> ( model, Cmd.none )
 
       UpdateModelResult _ -> ( model, Cmd.none )
 
-      SelectModel name -> ( { model | currentModelName = Just name }, Cmd.none )
+      SelectModel name ->
+        case (project |> Maybe.andThen (Dict.get name << .models)) of
+          Just { graph } ->
+            ( { model | currentModelName = Just name }
+            , Graphviz.generateDiagram graph
+            )
+          _ -> (model, Cmd.none)
+      
+      DiagramGenerated diagram ->
+        ( { model | diagram = Just diagram } , Cmd.none )
         
 
-     
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Graphviz.diagramResult DiagramGenerated
