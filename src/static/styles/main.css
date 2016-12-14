@@ -94,6 +94,7 @@ main.mdl-layout__content {
 .syntax-field {
   width: 100%;
   flex: 1;
+  padding: 16px;
 }
 
 .syntax-field:first-child {
@@ -101,6 +102,16 @@ main.mdl-layout__content {
 }
 .syntax-field:last-child {
   margin-top: 5px;
+}
+
+.syntax-field > .mdl-textfield {
+  width: 100%;
+  height: 100%;
+}
+
+.syntax-field textarea {
+  height: 100%;
+  resize: none;
 }
 
 .empty-project {
@@ -112,6 +123,10 @@ main.mdl-layout__content {
 .list-item--separated {
   margin-top: 10px;
   border-top: 1px solid lightgrey;
+}
+
+.list-item--selected {
+  background-color: #F5F5F5;
 }
 
 .list-header {

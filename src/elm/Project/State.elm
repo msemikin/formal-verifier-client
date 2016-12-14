@@ -14,17 +14,24 @@ validate : Validation () ModelForm
 validate =
   map ModelForm (field "name" string)
 
+
+getFirstModelName : Project -> Maybe String
+getFirstModelName project =
+  Dict.values project.models
+    |> List.head
+    |> Maybe.map .name
+
 init : Maybe Project -> String -> String -> (Model, Cmd Msg)
 init project projectId accessToken =
   let
-    (currentModelIndex, loadingProject, effect) =
+    (currentModelName, loadingProject, effect) =
       case project of
         Nothing -> (Nothing, True, fetchProject projectId accessToken)
-        Just project -> (Just 0, False, Cmd.none)
+        Just project -> (getFirstModelName project, False, Cmd.none)
   in
     ( { mdl = Material.model
       , modelForm = Form.initial [] validate
-      , currentModelIndex = currentModelIndex
+      , currentModelName = currentModelName
       , projectId = projectId
       , accessToken = accessToken
       }
@@ -59,11 +66,9 @@ update msg model =
 
       CreateModelResult (Err _) -> (model, Cmd.none)
 
-      ProjectResult (Ok { models }) ->
+      ProjectResult (Ok project) ->
         ( { model |
-            currentModelIndex = if Dict.size models > 0
-              then Just 0
-              else Nothing
+            currentModelName = getFirstModelName project
           }
         , Cmd.none
         )
@@ -71,6 +76,8 @@ update msg model =
       ProjectResult (Err _) -> ( model, Cmd.none )
 
       UpdateModelResult _ -> ( model, Cmd.none )
+
+      SelectModel name -> ( { model | currentModelName = Just name }, Cmd.none )
         
 
      

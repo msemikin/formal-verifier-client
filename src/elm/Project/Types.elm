@@ -13,7 +13,7 @@ type alias ModelForm =
 type alias Model =
   { mdl : Material.Model
   , modelForm : Form () ModelForm
-  , currentModelIndex : Maybe Int
+  , currentModelName : Maybe String
   , projectId : String
   , accessToken : String
   }
@@ -25,3 +25,4 @@ type Msg =
   | CreateModelResult (Result Http.Error LTS)
   | ProjectResult (Result Http.Error Project)
   | UpdateModelResult (Result Http.Error LTS)
+  | SelectModel String

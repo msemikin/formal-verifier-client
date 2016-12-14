@@ -3,6 +3,7 @@ module Project.View exposing (view)
 import Dict
 import Form exposing (Form)
 import Html exposing (..)
+import Html.Events
 import Html.Attributes exposing (class)
 import Material
 import Material.Spinner as Loading
@@ -18,7 +19,7 @@ import Project.Types exposing (..)
 import Helpers.Form as FormHelpers
 
 view : Maybe Project -> Model -> Html Msg
-view project { modelForm, mdl } =
+view project { currentModelName, modelForm, mdl } =
   case project of
     Just project ->
       div [ class "project-container" ]
@@ -37,36 +38,10 @@ view project { modelForm, mdl } =
                 ]
             else
               div [ class "mdl-grid" ]
-                [ Options.div
-                  [ cs "mdl-cell mdl-cell--2-col"
-                  , Elevation.e2
-                  ]
-                  [ h5 [ class "list-header" ] [ text "Models" ]
-                  , List.ul [] <|
-                      (List.map model <| Dict.values project.models) ++
-                        [ List.li
-                          [ cs "list-item--separated" ]
-                          [ List.content
-                            [ Dialog.openOn "click" ]
-                            [ List.icon "add" []
-                            , text "Create new..."
-                            ]
-                          ]
-                        ]
-                  ]
-
+                [ modelsList (Maybe.withDefault "" currentModelName) project mdl
                 , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
-                  [ Options.div
-                    [ cs "syntax-field"
-                    , Elevation.e2
-                    ]
-                    []
-
-                  , Options.div
-                    [ cs "syntax-field"
-                    , Elevation.e2
-                    ]
-                    []
+                  [ modelEditor mdl
+                  , formulasEditor
                   ]
                 ]
           ]
@@ -77,11 +52,55 @@ view project { modelForm, mdl } =
         ]
 
 
-model : LTS -> Html Msg
-model { name } =
+modelEditor : Material.Model -> Html Msg
+modelEditor mdl =
+  Options.div
+    [ cs "syntax-field"
+    , Elevation.e2
+    ]
+    [ Textfield.render Mdl [0] mdl
+      [ Textfield.label "Model definition"
+      , Textfield.floatingLabel
+      , Textfield.textarea
+      ]
+    ]
+
+
+formulasEditor : Html Msg
+formulasEditor =
+  Options.div
+    [ cs "syntax-field"
+    , Elevation.e2
+    ]
+    []
+
+
+modelsList : String -> Project -> Material.Model -> Html Msg
+modelsList selectedModelName project mdl =
+  Options.div
+    [ cs "mdl-cell mdl-cell--2-col"
+    , Elevation.e2
+    ]
+    [ h5 [ class "list-header" ] [ text "Models" ]
+    , List.ul [] <|
+        (List.map (modelListItem selectedModelName) <| Dict.values project.models) ++
+          [ List.li
+            [ cs "list-item--separated"]
+            [ List.content
+              [ Dialog.openOn "click" ]
+              [ List.icon "add" []
+              , text "Create new..."
+              ]
+            ]
+          ]
+    ]
+
+modelListItem : String -> LTS -> Html Msg
+modelListItem selectedModelName { name } =
   List.li
-    [ ]
-    [ List.content []
+    (if selectedModelName == name then [ cs "list-item--selected" ] else [])
+    [ List.content
+      [ Options.attribute <| Html.Events.onClick (SelectModel name) ]
       [ text name ]
     ]
 
@@ -97,7 +116,7 @@ createModelDialog form mdl =
       [ Dialog.title [] [ text "New model" ]
       , Dialog.content []
         [ div []
-          [ Textfield.render Mdl [0] mdl
+          [ Textfield.render Mdl [3] mdl
             ([ Textfield.label "Name"
             , Textfield.floatingLabel
             , cs "field"
