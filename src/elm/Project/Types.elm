@@ -22,11 +22,13 @@ type alias Model =
   { mdl : Material.Model
   , modelForm : Form () ModelForm
   , formulaForm : Form () FormulaForm
-  , currentModelName : Maybe String
+  , currentModelId : Maybe String
   , projectId : String
   , accessToken : String
   , diagram : Maybe String
   , currentDialog : CurrentDialog
+  , currentTab : Int
+  , modelSource : Maybe String
   }
 
 type Msg =
@@ -36,10 +38,12 @@ type Msg =
   | CreateModel Form.Msg
   | CreateModelResult (Result Http.Error LTS)
   | ProjectResult (Result Http.Error Project)
-  | UpdateModel String
+  | UpdateModel
   | UpdateModelResult (Result Http.Error LTS)
   | SelectModel String
   | DiagramGenerated String
   | AddFormula Form.Msg
   | OpenModelDialog
   | OpenFormulaDialog
+  | SelectTab Int
+  | UpdateModelSource String

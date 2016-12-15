@@ -25,8 +25,12 @@ view projects { mdl, projectForm } =
       , Options.div
         [ Elevation.e2
         ]
-        [ div []
-          [ List.ul [] <| List.map project projects ]
+        [ if List.length projects == 0
+            then
+              p [ class "no-projects" ] [ text "No projects created yet!" ]
+            else
+              div []
+                [ List.ul [] <| List.map project projects ]
         ]
       , Button.render Mdl [0] mdl
         [ Button.fab

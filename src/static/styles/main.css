@@ -53,6 +53,12 @@ main.mdl-layout__content {
   padding-left: 16px;
 }
 
+.no-projects {
+  text-align: center;
+  margin: 0;
+  padding: 20px;
+}
+
 .list-item {
   cursor: pointer;
   transition: all .2s ease-out;
@@ -104,36 +110,52 @@ main.mdl-layout__content {
   justify-content: center;
 }
 
-.syntaxes-container {
+.tabs-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.mdl-tabs {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mdl-tab__panel {
+  flex: 1;
+  display: flex;
+}
+
+.mdl-tab__panel > div {
+  flex: 1;
+  display: flex;
+}
+
+.tab-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .syntax-field {
-  width: 100%;
   flex: 1;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-}
-
-.syntax-field:first-child {
-  margin-bottom: 5px;
-}
-.syntax-field:last-child {
-  margin-top: 5px;
+  flex-flow: column;
 }
 
 .model-editor {
   flex: 1;
   max-width: auto;
-  padding: 0px 16px;
+  padding: 16px;
   display: flex;
 }
 
 .model-textfield {
   flex: 1;
   width: auto;
+  padding: 0;
+  border: 0;
 }
 
 .model-editor textarea {
@@ -185,7 +207,7 @@ main.mdl-layout__content {
 
 .formulas-footer {
   text-align: right;
-  padding: 20px;
+  padding: 10px;
   border-top: 1px solid #E0E0E0;
 }
 

@@ -28,26 +28,27 @@ getFirstModel project =
 init : Maybe Project -> String -> String -> (Model, Cmd Msg)
 init project projectId accessToken =
   let
-    (effect, currentModelName) =
+    (effect, currentModelId, modelSource) =
       case project of
         Just project ->
           case getFirstModel project of
             Just model ->
-              (Graphviz.generateDiagram model.graph, Just model.name)
+              (Graphviz.generateDiagram model.graph, Just model.id, Just model.source)
             Nothing -> 
-              (Cmd.none, Nothing)
+              (Cmd.none, Nothing, Nothing)
         Nothing ->
-          (fetchProject projectId accessToken, Nothing)
-    _ = Debug.log "effect" <| toString effect
+          (fetchProject projectId accessToken, Nothing, Nothing)
   in
     ( { mdl = Material.model
       , modelForm = Form.initial [] validateModel
       , formulaForm = Form.initial [] validateFormula
-      , currentModelName = currentModelName
+      , currentModelId = currentModelId
       , projectId = projectId
       , accessToken = accessToken
       , diagram = Nothing
       , currentDialog = ModelDialog
+      , currentTab = 0
+      , modelSource = modelSource
       }
     , effect
     )
@@ -56,12 +57,13 @@ init project projectId accessToken =
 update : Maybe Project -> Msg -> Model -> (Model, Cmd Msg)
 update project msg model =
   let
-    getModel name =
-      project |> Maybe.andThen (Dict.get name << .models) 
+    getModel id =
+      project |> Maybe.andThen (Dict.get id << .models) 
     updateModelForm formMsg =
       { model | modelForm = Form.update formMsg model.modelForm }
     updateFormulaForm formMsg =
       { model | formulaForm = Form.update formMsg model.formulaForm }
+   
   in
     case msg of
       Mdl mdlMsg ->
@@ -81,44 +83,50 @@ update project msg model =
               (newModel, createModel model.projectId formData model.accessToken)
             Nothing -> (newModel, Cmd.none)
       
-      CreateModelResult (Ok _) -> (model, closeDialog "")
+      CreateModelResult (Ok { id }) ->
+        ( { model | modelSource = Just "", currentModelId = Just id} , closeDialog "")
 
       CreateModelResult (Err _) -> (model, Cmd.none)
 
       ProjectResult (Ok project) ->
-        case getFirstModel project of
-          Just { name } -> update (Just project) (SelectModel name) model
-          Nothing -> 
-            ( { model | currentModelName = Nothing } , Cmd.none )
+        let
+          _ = Debug.log "project result" project
+        in
+          case getFirstModel project of
+            Just { id, source } ->
+              update (Just project) (SelectModel id) { model | modelSource = Just source }
+            Nothing -> 
+              ( { model | currentModelId = Nothing } , Cmd.none )
      
       ProjectResult (Err _) -> ( model, Cmd.none )
 
-      UpdateModel source ->
-        case model.currentModelName of
-          Just name ->
-            (model, updateModel model.projectId name source model.accessToken)
+      UpdateModel ->
+        case (model.currentModelId, model.modelSource) of
+          (Just modelId, Just modelSource) ->
+            (model, updateModel model.projectId modelId modelSource model.accessToken)
           _ -> (model, Cmd.none)
 
-      UpdateModelResult (Ok _) -> ( model, closeDialog "" )
-      UpdateModelResult (Err _) -> ( model, Cmd.none )
+      UpdateModelResult (Ok { graph }) -> ( model, Graphviz.generateDiagram graph )
+
+      UpdateModelResult (Err _) -> (model, Cmd.none)
 
       AddFormula formMsg ->
         let
           newModel = updateFormulaForm formMsg
           output = Form.getOutput newModel.formulaForm
         in
-          case (model.currentModelName, output) of
-            (Just name, Just { content }) ->
-              case getModel name of
+          case (model.currentModelId, output) of
+            (Just modelId, Just { content }) ->
+              case getModel modelId of
                 Just { formulas } ->
-                  (newModel, patchModel model.projectId name (content :: formulas) model.accessToken)
+                  (newModel, patchModel model.projectId modelId (content :: formulas) model.accessToken)
                 _ -> (model, Cmd.none)
             _ -> (newModel, Cmd.none)
 
-      SelectModel name ->
-        case getModel name of
-          Just { graph } ->
-            ( { model | currentModelName = Just name }
+      SelectModel id ->
+        case getModel id of
+          Just { graph, source } ->
+            ( { model | currentModelId = Just id, modelSource = Just source }
             , Graphviz.generateDiagram graph
             )
           _ -> (model, Cmd.none)
@@ -131,6 +139,12 @@ update project msg model =
       
       OpenFormulaDialog ->
         ( { model | currentDialog = FormulaDialog }, openDialog "" )
+      
+      SelectTab tab ->
+        ( { model | currentTab = tab }, Cmd.none )
+      
+      UpdateModelSource source ->
+        ( { model | modelSource = Just source }, Cmd.none )
         
 
 subscriptions : Sub Msg

@@ -22,7 +22,8 @@ type alias LoginResponse =
   }
 
 type alias LTS =
-  { name : String
+  { id : String
+  , name : String
   , graph : String
   , source : String
   , formulas : List String

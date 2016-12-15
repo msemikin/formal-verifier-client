@@ -89,9 +89,9 @@ insertModelInProject : String -> LTS -> Dict String Project -> Dict String Proje
 insertModelInProject projectId lts projects =
   Dict.update
     projectId
-    (\model -> Maybe.map
-      (\project -> { project | models = Dict.insert lts.name lts project.models })
-      model
+    (\project -> Maybe.map
+      (\project -> { project | models = Dict.insert lts.id lts project.models })
+      project
     )
     projects
 
@@ -152,7 +152,7 @@ update msg model =
           updatedModel =
             { model | projects = Dict.insert project.id project model.projects }
         in
-          updateProfile (Profile.Types.CreateProjectResult (Ok project)) model
+          updateProfile (Profile.Types.CreateProjectResult (Ok project)) updatedModel
       
       ProfileMsg msg -> updateProfile msg model
       

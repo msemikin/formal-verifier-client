@@ -9,6 +9,7 @@ import Types exposing (..)
 modelDecoder : Decoder LTS
 modelDecoder =
   DecodePipeline.decode LTS
+    |> requiredAt ["_id", "$oid"] string
     |> required "name" string
     |> required "graph" string
     |> required "source" string
@@ -21,7 +22,7 @@ projectDecoder =
     |> required "name" string
     |> required "description" string
     |> required "models" (list modelDecoder
-      |> map (List.map (\lts -> ( lts.name, lts )) >> Dict.fromList)
+      |> map (List.map (\lts -> ( lts.id, lts )) >> Dict.fromList)
     )
 
 

@@ -3,7 +3,7 @@ module Project.View exposing (view)
 import Dict
 import Form exposing (Form)
 import Html exposing (..)
-import Html.Events
+import Html.Events exposing (onInput)
 import Html.Attributes exposing (..)
 import Material
 import Material.Spinner as Loading
@@ -15,6 +15,7 @@ import Material.Dialog as Dialog
 import Material.Textfield as Textfield
 import Material.Icon as Icon
 import Material.Color as Color
+import Material.Tabs as Tabs
 import Json.Encode
 
 import Types exposing (..)
@@ -22,64 +23,93 @@ import Project.Types exposing (..)
 import Helpers.Form as FormHelpers
 
 view : Maybe Project -> Model -> Html Msg
-view project { diagram, currentModelName, modelForm, formulaForm, mdl, currentDialog } =
-  case project of
-    Just project ->
-      div [ class "project-container" ]
-        [ case currentDialog of
-            ModelDialog -> createModelDialog modelForm mdl
-            FormulaDialog -> createFormulaDialog formulaForm mdl
-        , case currentModelName of
-            Nothing ->
-              div [ class "empty-project" ]
-                [ p [] [ text "You should create your first model" ]
-                , Button.render Mdl [0] mdl
-                  [ Button.raised
-                  , Button.colored
-                  , Button.ripple
-                  , Button.onClick OpenModelDialog
-                  ]
-                  [ text "Create model"]
-                ]
-            Just currentModelName ->
-              case Dict.get currentModelName project.models of
-                Just currentModel ->
-                  div [ class "mdl-grid" ]
-                    [ modelsList currentModelName project mdl
-                    , div [ class "mdl-cell mdl-cell--6-col syntaxes-container" ]
-                      [ modelEditor currentModel mdl
-                      , formulasEditor mdl currentModel.formulas
-                      ]
-                    , modelGraph diagram
+view project
+  { diagram
+  , currentModelId
+  , modelForm
+  , formulaForm
+  , mdl
+  , currentDialog
+  , currentTab
+  , modelSource
+  } =
+    case project of
+      Just project ->
+        div [ class "project-container" ]
+          [ case currentDialog of
+              ModelDialog -> createModelDialog modelForm mdl
+              FormulaDialog -> createFormulaDialog formulaForm mdl
+          , case currentModelId of
+              Nothing ->
+                div [ class "empty-project" ]
+                  [ p [] [ text "You should create your first model" ]
+                  , Button.render Mdl [0] mdl
+                    [ Button.raised
+                    , Button.colored
+                    , Button.ripple
+                    , Button.onClick OpenModelDialog
                     ]
-                Nothing -> div [] []
+                    [ text "Create model"]
+                  ]
+              Just modelId ->
+                case (Dict.get modelId project.models, modelSource) of
+                  (Just currentModel, Just modelSource) ->
+                    div [ class "mdl-grid" ]
+                      [ modelsList modelId project mdl
+                      , Options.div
+                        [ cs "mdl-cell mdl-cell--6-col tabs-container"
+                        , Elevation.e2
+                        ]
+                        [ Tabs.render Mdl [0] mdl
+                          [ Tabs.ripple
+                          , Tabs.onSelectTab SelectTab
+                          , Tabs.activeTab currentTab
+                          ]
+                          [ Tabs.label 
+                              [ Options.center ] 
+                              [ Icon.i "input"
+                              , Options.span [ css "width" "4px" ] []
+                              , text "Model definition" 
+                              ]
+                          , Tabs.label 
+                              [ Options.center ] 
+                              [ Icon.i "functions"
+                              , Options.span [ css "width" "4px" ] []  
+                              , text "Formulas" 
+                              ]
+                          ]
+                          [ case currentTab of
+                              0 -> modelEditor modelSource mdl
+                              _ -> formulasEditor mdl currentModel.formulas
+                          ]
+                        ]
+                      , modelGraph diagram
+                      ]
+                  _ -> div [] []
+            ]
+
+      Nothing ->
+        div [ class "spinner-container" ]
+          [ Loading.spinner [Loading.active True]
           ]
 
-    Nothing ->
-      div [ class "spinner-container" ]
-        [ Loading.spinner [Loading.active True]
-        ]
 
-
-modelEditor : LTS -> Material.Model -> Html Msg
-modelEditor lts mdl =
-  Options.div
-    [ cs "syntax-field"
-    , Elevation.e2
-    ]
-    [ h6 [ class "subheader" ] [ text "Model definition" ]
-    , div [ class "model-editor" ]
-      [ Textfield.render Mdl [1] mdl
-        [ cs "model-textfield"
-        , Textfield.textarea
-        , Textfield.value lts.source
+modelEditor : String -> Material.Model -> Html Msg
+modelEditor source mdl =
+  div [ class "tab-content" ]
+    [ div [ class "model-editor" ]
+      [ textarea
+        [ class "model-textfield", value source
+        , onInput UpdateModelSource
         ]
+        [ ]
       ]
     , div [ class "formulas-footer" ]
       [ Button.render Mdl [1] mdl
         [ Button.raised
         , Button.colored
         , Button.ripple
+        , Button.onClick UpdateModel
         ]
         [ text "Save"]
       ]
@@ -88,12 +118,8 @@ modelEditor lts mdl =
 
 formulasEditor : Material.Model -> List String -> Html Msg
 formulasEditor mdl formulas =
-  Options.div
-    [ cs "syntax-field"
-    , Elevation.e2
-    ]
-    [ h6 [ class "subheader" ] [ text "Formulas" ]
-    , div [ class "formulas-list" ]
+  div [ class "tab-content" ]
+    [ div [ class "formulas-list" ]
       [ if List.length formulas == 0
           then p [ class "no-formulas" ] [ text "No formulas added yet!" ]
           else div [] []
@@ -153,14 +179,14 @@ modelGraph diagram =
 
 
 modelsList : String -> Project -> Material.Model -> Html Msg
-modelsList selectedModelName project mdl =
+modelsList selectedModelId project mdl =
   Options.div
     [ cs "mdl-cell mdl-cell--2-col"
     , Elevation.e2
     ]
     [ h5 [ class "list-header" ] [ text "Models" ]
     , List.ul [] <|
-        (List.map (modelListItem selectedModelName) <| Dict.values project.models) ++
+        (List.map (modelListItem selectedModelId) <| Dict.values project.models) ++
           [ List.li
             [ cs "list-item list-item--separated"
             , Options.attribute <| Html.Events.onClick OpenModelDialog
@@ -174,11 +200,11 @@ modelsList selectedModelName project mdl =
     ]
 
 modelListItem : String -> LTS -> Html Msg
-modelListItem selectedModelName { name } =
+modelListItem selectedModelId { id, name } =
   List.li
     [ cs <| String.join " " <|
-        ["list-item"] ++ (if selectedModelName == name then ["list-item--selected"] else [])
-    , Options.attribute <| Html.Events.onClick (SelectModel name) 
+        ["list-item"] ++ (if selectedModelId == id then ["list-item--selected"] else [])
+    , Options.attribute <| Html.Events.onClick (SelectModel id) 
     ]
     [ List.content
       []
