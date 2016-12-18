@@ -1,6 +1,7 @@
 module Project.View exposing (view)
 
-import Dict
+import Http
+import Dict exposing (Dict)
 import Form exposing (Form)
 import Html exposing (..)
 import Html.Events exposing (onInput)
@@ -32,13 +33,16 @@ view project
   , currentDialog
   , currentTab
   , modelSource
+  , syntaxError
+  , formulasResults
+  , currentFormula
   } =
     case project of
       Just project ->
         div [ class "project-container" ]
           [ case currentDialog of
-              ModelDialog -> createModelDialog modelForm mdl
-              FormulaDialog -> createFormulaDialog formulaForm mdl
+              ModelDialog -> createModelDialog syntaxError modelForm mdl
+              FormulaDialog -> createFormulaDialog syntaxError formulaForm mdl
           , case currentModelId of
               Nothing ->
                 div [ class "empty-project" ]
@@ -80,7 +84,8 @@ view project
                           ]
                           [ case currentTab of
                               0 -> modelEditor modelSource mdl
-                              _ -> formulasEditor mdl currentModel.formulas
+                              _ -> formulasEditor
+                                mdl currentModel.formulas formulasResults currentFormula
                           ]
                         ]
                       , modelGraph diagram
@@ -115,41 +120,59 @@ modelEditor source mdl =
       ]
     ]
 
-
-formulasEditor : Material.Model -> List String -> Html Msg
-formulasEditor mdl formulas =
+formulasEditor : Material.Model -> List String -> Maybe (Dict String ValidationResult) -> Maybe String -> Html Msg
+formulasEditor mdl formulas validations currentFormula =
   div [ class "tab-content" ]
     [ div [ class "formulas-list" ]
       [ if List.length formulas == 0
           then p [ class "no-formulas" ] [ text "No formulas added yet!" ]
           else div [] []
-      , (List.ul [] <| List.indexedMap (formulaListItem mdl) formulas ++
-        [ List.li
-          [ cs "list-item list-item--separated"
-          , Options.attribute <| Html.Events.onClick OpenFormulaDialog
-          ]
-          [ List.content []
-            [ List.icon "add" []
-            , text "Add new..."
+      , (List.ul []
+          <| (List.indexedMap
+            (\i f -> formulaListItem mdl i f
+              (currentFormula |> Maybe.map ((==) f) |> Maybe.withDefault False)
+              (validations |> Maybe.andThen (Dict.get f))
+            )
+            formulas
+          ) ++
+          [ List.li
+            [ cs "list-item list-item--separated"
+            , Options.attribute <| Html.Events.onClick OpenFormulaDialog
             ]
-          ]
-        ])
+            [ List.content []
+              [ List.icon "add" []
+              , text "Add new..."
+              ]
+            ]
+          ])
       ]
     , div [ class "formulas-footer" ]
       [ Button.render Mdl [2] mdl
         [ Button.raised
         , Button.colored
         , Button.ripple
+        , Button.onClick CheckModel
         ]
         [ text "Run"]
       ]
     ]
 
-formulaListItem : Material.Model -> Int -> String -> Html Msg
-formulaListItem mdl index formula =
-  List.li [ cs "list-item" ]
+formulaListItem : Material.Model -> Int -> String -> Bool -> Maybe ValidationResult -> Html Msg
+formulaListItem mdl index formula isSelected validation =
+  List.li
+    [ cs <| String.join " " <| ["list-item"] ++ if isSelected then ["list-item--selected"] else []
+    , Options.attribute <| Html.Events.onClick (SelectFormula formula) 
+    ]
     [ List.content []
-      [ List.icon "check" [ Color.text (Color.color Color.Green Color.S500)]
+      [ case validation of
+          Just { valid } ->
+            if valid
+              then
+                List.icon "check" [ Color.text (Color.color Color.Green Color.S500)]
+              else
+                List.icon "error" [ Color.text (Color.color Color.Red Color.S500)]
+          Nothing ->
+            List.icon "question" [ Color.text (Color.color Color.Red Color.S500)]
       , text formula
       ]
     , editFormula mdl index
@@ -211,8 +234,8 @@ modelListItem selectedModelId { id, name } =
       [ text name ]
     ]
 
-createModelDialog : Form e o -> Material.Model -> Html Msg
-createModelDialog form mdl =
+createModelDialog : Maybe String -> Form e o -> Material.Model -> Html Msg
+createModelDialog syntaxError form mdl =
   let
     getField = FormHelpers.getField form
     getFieldValue = FormHelpers.getFieldValue form
@@ -228,6 +251,9 @@ createModelDialog form mdl =
             , Textfield.floatingLabel
             , cs "field"
             , getError "name" "Name is required"
+            , case syntaxError of
+                Just error -> Textfield.error error
+                Nothing -> Options.nop
             ] ++ connectField "name")
           ]
         ]
@@ -243,8 +269,8 @@ createModelDialog form mdl =
         ]
       ]
 
-createFormulaDialog : Form e o -> Material.Model -> Html Msg
-createFormulaDialog form mdl =
+createFormulaDialog : Maybe String -> Form e o -> Material.Model -> Html Msg
+createFormulaDialog syntaxError form mdl =
   let
     getField = FormHelpers.getField form
     getFieldValue = FormHelpers.getFieldValue form
@@ -253,13 +279,15 @@ createFormulaDialog form mdl =
   in
     Dialog.view []
       [ Dialog.title [] [ text "New formula" ]
-      , Dialog.content []
-        [ div []
+      , Dialog.content [] [ div []
           [ Textfield.render Mdl [0] mdl
             ([ Textfield.label "Content"
             , Textfield.floatingLabel
             , cs "field"
             , getError "content" "Content is required"
+            , case syntaxError of
+                Just error -> Textfield.error error
+                Nothing -> Options.nop
             ] ++ connectField "content")
           ]
         ]

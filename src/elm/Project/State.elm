@@ -5,6 +5,8 @@ import Material
 import Form exposing (Form)
 import Form.Validate as Validate exposing (..)
 import Dict
+import Http exposing (Error(..))
+import Json.Decode as Decode exposing (decodeString)
 
 import Types exposing (..)
 import Project.Types exposing (..)
@@ -49,6 +51,9 @@ init project projectId accessToken =
       , currentDialog = ModelDialog
       , currentTab = 0
       , modelSource = modelSource
+      , formulasResults = Nothing
+      , currentFormula = Nothing
+      , syntaxError = Nothing
       }
     , effect
     )
@@ -106,9 +111,17 @@ update project msg model =
             (model, updateModel model.projectId modelId modelSource model.accessToken)
           _ -> (model, Cmd.none)
 
-      UpdateModelResult (Ok { graph }) -> ( model, Graphviz.generateDiagram graph )
+      UpdateModelResult (Ok { graph }) ->
+        ( { model | syntaxError = Nothing }
+        , Cmd.batch [Graphviz.generateDiagram graph, closeDialog ""]
+        )
 
-      UpdateModelResult (Err _) -> (model, Cmd.none)
+      UpdateModelResult (Err (BadStatus response)) ->
+        case decodeString (Decode.field "message" Decode.string) response.body of
+          Ok syntaxError -> ( { model | syntaxError = Just syntaxError }, Cmd.none)
+          Err _ -> ( model, Cmd.none )
+      
+      UpdateModelResult (Err _) -> ( model, Cmd.none )
 
       AddFormula formMsg ->
         let
@@ -145,7 +158,32 @@ update project msg model =
       
       UpdateModelSource source ->
         ( { model | modelSource = Just source }, Cmd.none )
+      
+      CheckModel ->
+        case model.currentModelId of
+          Just currentModelId ->
+            ( model, checkModel model.projectId currentModelId model.accessToken  )
+          Nothing -> ( model, Cmd.none )
+      
+      CheckModelResult (Ok formulasResults) ->
+        case Dict.toList formulasResults |> List.head of
+          Just ( formula, graph ) ->
+            update project (SelectFormula formula)
+              { model | formulasResults = Just formulasResults }
+
+          Nothing -> ( model, Cmd.none )
+
+      CheckModelResult (Err _) -> ( model, Cmd.none )
         
+      SelectFormula formula ->
+        case model.formulasResults |> Maybe.andThen (Dict.get formula) of
+          Just { graph } ->
+            ( { model |
+                currentFormula = Just formula
+              }
+            , Graphviz.generateDiagram graph
+            )
+          Nothing -> ( model, Cmd.none )
 
 subscriptions : Sub Msg
 subscriptions =

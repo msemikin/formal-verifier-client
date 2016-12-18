@@ -1,5 +1,6 @@
 module Project.Types exposing (..)
 
+import Dict exposing (Dict)
 import Http
 import Material
 import Form exposing (Form)
@@ -18,6 +19,12 @@ type CurrentDialog =
     ModelDialog
   | FormulaDialog
 
+
+type alias ValidationResult =
+  { graph : String
+  , valid : Bool
+  }
+
 type alias Model =
   { mdl : Material.Model
   , modelForm : Form () ModelForm
@@ -29,6 +36,9 @@ type alias Model =
   , currentDialog : CurrentDialog
   , currentTab : Int
   , modelSource : Maybe String
+  , formulasResults : Maybe (Dict String ValidationResult )
+  , currentFormula : Maybe String
+  , syntaxError : Maybe String
   }
 
 type Msg =
@@ -47,3 +57,6 @@ type Msg =
   | OpenFormulaDialog
   | SelectTab Int
   | UpdateModelSource String
+  | CheckModel
+  | CheckModelResult (Result Http.Error (Dict String ValidationResult))
+  | SelectFormula String
