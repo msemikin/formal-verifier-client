@@ -363,7 +363,7 @@ composeDialog firstDropdown secondDropdown form models firstComposeModel secondC
     connectField = FormHelpers.connectField ComposeFormMsg form
     getError = FormHelpers.getError form
   in
-    Dialog.view []
+    Dialog.view [ cs "compose-dialog" ]
       [ Dialog.title []
         [ text "Compose models" ]
       , Dialog.content [] [ div []

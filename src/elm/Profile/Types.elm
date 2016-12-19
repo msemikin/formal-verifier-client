@@ -22,3 +22,5 @@ type Msg =
   | UpdateRoute Route
   | CreateProject Form.Msg
   | CreateProjectResult (Result Http.Error (Project))
+  | DeleteProject String
+  | DeleteProjectResult (Result Http.Error Bool) String

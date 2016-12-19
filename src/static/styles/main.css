@@ -216,3 +216,7 @@ main.mdl-layout__content {
   margin: 0;
   padding: 20px;
 }
+
+.compose-dialog {
+  width: 400px;
+}

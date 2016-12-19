@@ -178,6 +178,12 @@ update msg model =
         in
           updateProfile (Profile.Types.CreateProjectResult (Ok project)) updatedModel
       
+      ProfileMsg (Profile.Types.DeleteProjectResult (Ok _) projectId) ->
+        let
+          (updatedModel, effect) = updateProfile (Profile.Types.DeleteProjectResult (Ok True) projectId) model
+        in
+          ( { updatedModel | projects = Dict.remove projectId model.projects }, effect )
+      
       ProfileMsg msg -> updateProfile msg model
       
       ProjectMsg (Project.Types.CreateModelResult (Ok newModel)) ->

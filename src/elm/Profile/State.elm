@@ -49,8 +49,17 @@ update accessToken msg model =
             Nothing -> (newModel, Cmd.none)
       
       CreateProjectResult (Ok project) ->
-        ( model
+        ( { model | projectForm = Form.initial [] validate }
         , closeDialog ""
         )
 
       CreateProjectResult (Err _) -> (model, Cmd.none)
+
+      DeleteProject projectId ->
+        ( model, deleteProject projectId accessToken )
+      
+      DeleteProjectResult (Ok _) _ ->
+        ( { model | projectForm = Form.initial [] validate } , Cmd.none)
+
+      DeleteProjectResult (Err _) _ ->
+        (model, Cmd.none)

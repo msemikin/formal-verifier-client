@@ -3,6 +3,7 @@ module Profile.View exposing (view)
 import Html exposing (..)
 import Html.Events
 import Html.Attributes exposing (class)
+import Material
 import Material.Options as Options exposing (cs)
 import Material.Elevation as Elevation
 import Material.List as List
@@ -30,7 +31,7 @@ view projects { mdl, projectForm } =
               p [ class "no-projects" ] [ text "No projects created yet!" ]
             else
               div []
-                [ List.ul [] <| List.map project projects ]
+                [ List.ul [] <| List.indexedMap (project mdl) projects ]
         ]
       , Button.render Mdl [0] mdl
         [ Button.fab
@@ -44,8 +45,8 @@ view projects { mdl, projectForm } =
       ]
     ]
 
-project : Project -> Html Msg
-project { id, name, description, models } =
+project : Material.Model -> Int -> Project -> Html Msg
+project mdl index { id, name, description, models } =
   List.li
     [ cs "list-item"
     , List.withSubtitle
@@ -57,8 +58,18 @@ project { id, name, description, models } =
       , List.subtitle []
         [ text description ]
       ]
+    , deleteProject mdl index id
     , countBadge <| Dict.size models
     ]
+
+deleteProject : Material.Model -> Int -> String -> Html Msg
+deleteProject mdl index projectId =
+  Button.render Mdl [index] mdl
+    [ Button.icon 
+    , Button.onClick <| DeleteProject projectId
+    ]
+    [ Icon.i "delete" ] 
+
 
 countBadge : Int -> Html Msg
 countBadge count =

@@ -33,6 +33,6 @@ app.ports.closeDialog.subscribe(function () {
 });
 
 app.ports.generateDiagram.subscribe(function (src) {
-  var diagram = Viz(src);
+  var diagram = Viz(src, { scale: 2 });
   app.ports.diagramResult.send(diagram);
 });

@@ -2,6 +2,7 @@ module Profile.Rest exposing (..)
 
 import Http
 import Json.Encode as Encode
+import Json.Decode as Decode
 
 import Profile.Types exposing (..)
 import Helpers.Rest
@@ -23,3 +24,13 @@ createProject { name, description } accessToken =
       , method = "POST"
       , accessToken = accessToken
       }
+
+deleteProject : String -> String -> Cmd Msg
+deleteProject projectId accessToken =
+  Helpers.Rest.secureRequest DeleteProjectResult
+    { url = apiUrl ++ "/projects/" ++ projectId
+    , body = Http.emptyBody
+    , decoder = Decode.field "success" Decode.bool
+    , method = "DELETE"
+    , accessToken = accessToken
+    } |> Cmd.map (\result -> result projectId)
