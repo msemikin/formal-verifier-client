@@ -62,3 +62,6 @@ type Msg =
   | SelectFormula String
   | EditFormula String
   | UpdateFormula Form.Msg
+  | DeleteFormula String
+  | DeleteModel String
+  | DeleteModelResult (Result Http.Error Bool) String

@@ -5,7 +5,6 @@ import Material
 import Maybe
 import Platform.Cmd as Cmd
 import Dict exposing (Dict)
-import Array
 
 import Model exposing (Model, PageData(..))
 import Types exposing (..)
@@ -94,6 +93,31 @@ insertModelInProject projectId lts projects =
     )
     projects
 
+deleteProjectModel : String -> String -> Dict String Project -> Dict String Project
+deleteProjectModel projectId modelId projects =
+  Dict.update
+    projectId
+    (\project -> Maybe.map
+      (\project -> { project | models = Dict.remove modelId project.models })
+      project
+    )
+    projects
+
+
+authenticate : Msg -> Model -> User -> String -> (Model, Cmd Msg)
+authenticate msg model user accessToken =
+  let
+    (updatedModel, effect) = update
+      (UpdateRoute <| Maybe.withDefault ProfileRoute model.routeAfterLogin)
+      { model | user = Just user
+      , accessToken = Just accessToken
+      }
+  in
+    ( updatedModel
+    , Cmd.batch
+      [ effect, save <| "accessToken=" ++ accessToken ]
+    )
+
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -106,10 +130,8 @@ update msg model =
 
       Mdl mdlMsg -> Material.update mdlMsg model
 
-      RegisterMsg (Register.Types.RegisterResult (Result.Ok user)) ->
-        update
-          (UpdateRoute ProfileRoute)
-          { model | user = Just user, currentRoute = ProfileRoute }
+      RegisterMsg (Register.Types.RegisterResult (Result.Ok { accessToken, user })) ->
+        authenticate msg model user accessToken
       
       RegisterMsg msg ->
         case model.pageData of
@@ -122,17 +144,19 @@ update msg model =
           _ -> (model, Cmd.none)
 
       LoginMsg (Login.Types.LoginResult (Ok { accessToken, user })) ->
+        authenticate msg model user accessToken
+      
+      Logout ->
         let
           (updatedModel, effect) = update
-            (UpdateRoute <| Maybe.withDefault ProfileRoute model.routeAfterLogin)
-            { model | user = Just user
-            , accessToken = Just accessToken
+            (UpdateRoute LoginRoute)
+            { model |
+              user = Nothing
+            , accessToken = Nothing
+            , projects = Dict.empty
             }
         in
-          ( updatedModel
-          , Cmd.batch
-            [ effect, save <| "accessToken=" ++ accessToken ]
-          )
+          ( updatedModel, save "accessToken=" )
       
       LoginMsg msg ->
         case model.pageData of
@@ -182,6 +206,15 @@ update msg model =
               _ -> model
         in
           updateProject (Project.Types.UpdateModelResult (Ok updatedLTS)) updatedModel
+      
+      ProjectMsg (Project.Types.DeleteModelResult (Ok success) modelId) ->
+        let updatedModel =
+          case model.currentRoute of
+            ProjectRoute projectId ->
+              { model | projects = deleteProjectModel projectId modelId model.projects }
+            _ -> model
+        in
+          updateProject (Project.Types.DeleteModelResult (Ok success) modelId) updatedModel
 
       
       ProjectMsg msg -> updateProject msg model

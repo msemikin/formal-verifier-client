@@ -4,7 +4,7 @@ import Http
 import Json.Encode as Encode
 
 import Register.Types exposing (RegistrationForm, Msg(..))
-import Decoder exposing (userDecoder)
+import Decoder exposing (..)
 import Config exposing (apiUrl)
 
 registerUser : RegistrationForm -> Cmd Msg
@@ -26,6 +26,6 @@ registerUser
 
       body = Http.jsonBody accountData
 
-      request = Http.post (apiUrl ++ "/register") body userDecoder
+      request = Http.post (apiUrl ++ "/register") body loginResultDecoder
     in
       Http.send RegisterResult request

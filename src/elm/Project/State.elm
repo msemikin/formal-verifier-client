@@ -249,6 +249,33 @@ update project msg model =
                 _ -> (model, Cmd.none)
             _ -> (newModel, Cmd.none)
 
+      DeleteFormula formula ->
+        case (model.currentModelId) of
+          Just modelId ->
+            case getModel modelId of
+              Just { formulas } ->
+                ( model
+                , patchModel
+                    model.projectId
+                    modelId
+                    ( formulas |> List.filter ((/=) formula))
+                    model.accessToken
+                )
+              _ -> (model, Cmd.none)
+          _ -> (model, Cmd.none)
+      
+      DeleteModel modelId ->
+        (model, deleteModel model.projectId modelId model.accessToken)
+      
+
+      DeleteModelResult (Ok success) _ ->
+        ( { model | currentModelId = project |> Maybe.andThen getFirstModel |> Maybe.map .id }
+        , Cmd.none
+        )
+      
+      DeleteModelResult (Err _) _ -> (model, Cmd.none)
+
+
 subscriptions : Sub Msg
 subscriptions =
   Graphviz.diagramResult DiagramGenerated

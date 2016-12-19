@@ -166,6 +166,7 @@ formulaListItem mdl index formula isSelected validation =
       , text formula
       ]
     , editFormula mdl index formula
+    , deleteFormula mdl index formula
     ]
 
 
@@ -176,6 +177,15 @@ editFormula mdl index formula =
     , Button.onClick <| EditFormula formula
     ]
     [ Icon.i "edit" ] 
+
+
+deleteFormula : Material.Model -> Int -> String -> Html Msg
+deleteFormula mdl index formula =
+  Button.render Mdl [20000 + index] mdl
+    [ Button.icon 
+    , Button.onClick <| DeleteFormula formula
+    ]
+    [ Icon.i "delete" ] 
 
 
 modelGraph : Maybe String -> Html Msg
@@ -200,7 +210,9 @@ modelsList selectedModelId project mdl =
     ]
     [ h5 [ class "list-header" ] [ text "Models" ]
     , List.ul [] <|
-        (List.map (modelListItem selectedModelId) <| Dict.values project.models) ++
+        (List.indexedMap (modelListItem mdl selectedModelId)
+          <| Dict.values project.models
+        ) ++
           [ List.li
             [ cs "list-item list-item--separated"
             , Options.attribute <| Html.Events.onClick OpenModelDialog
@@ -213,8 +225,8 @@ modelsList selectedModelId project mdl =
           ]
     ]
 
-modelListItem : String -> LTS -> Html Msg
-modelListItem selectedModelId { id, name } =
+modelListItem : Material.Model -> String -> Int -> LTS -> Html Msg
+modelListItem mdl selectedModelId index { id, name } =
   List.li
     [ cs <| String.join " " <|
         ["list-item"] ++ (if selectedModelId == id then ["list-item--selected"] else [])
@@ -223,7 +235,18 @@ modelListItem selectedModelId { id, name } =
     [ List.content
       []
       [ text name ]
+    , deleteModel mdl index id
     ]
+
+
+deleteModel : Material.Model -> Int -> String -> Html Msg
+deleteModel mdl index modelId =
+  Button.render Mdl [30000 + index] mdl
+    [ Button.icon 
+    , Button.onClick <| DeleteModel modelId
+    ]
+    [ Icon.i "delete" ] 
+
 
 createModelDialog : Maybe String -> Form e o -> Material.Model -> Html Msg
 createModelDialog syntaxError form mdl =

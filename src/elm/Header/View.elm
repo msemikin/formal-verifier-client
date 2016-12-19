@@ -18,6 +18,9 @@ view { mdl, user } =
             [ Button.render Mdl [0] mdl
               [ Button.onClick (UpdateRoute ProfileRoute) ]
               [ text <| user.firstName ++ " " ++ user.lastName ]
+            , Button.render Mdl [1] mdl
+              [ Button.onClick Logout ]
+              [ text "Logout" ]
             ]
           Nothing ->
             [ Button.render Mdl [0] mdl

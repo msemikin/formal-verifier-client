@@ -1,6 +1,7 @@
 module Project.Rest exposing (..)
 
 import Http
+import Result
 import Json.Encode as Encode
 import Json.Decode as Decode exposing (..)
 import Json.Decode.Pipeline as DecodePipeline exposing (required)
@@ -84,3 +85,13 @@ checkModel projectId modelId accessToken =
     , method = "POST"
     , accessToken = accessToken
     }
+
+deleteModel : String -> String -> String -> Cmd Msg
+deleteModel projectId modelId accessToken =
+  Helpers.Rest.secureRequest DeleteModelResult
+    { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelId
+    , body = Http.emptyBody
+    , decoder = Decode.field "success" Decode.bool
+    , method = "DELETE"
+    , accessToken = accessToken
+    } |> Cmd.map (\result -> result modelId)

@@ -23,4 +23,4 @@ type Msg =
     Mdl (Material.Msg Msg)
   | FormMsg (Form.Msg)
   | Register (Form.Msg)
-  | RegisterResult (Result Http.Error User)
+  | RegisterResult (Result Http.Error { user : User, accessToken : String })

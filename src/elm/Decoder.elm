@@ -6,6 +6,12 @@ import Json.Decode.Pipeline as DecodePipeline exposing (required, requiredAt)
 
 import Types exposing (..)
 
+loginResultDecoder : Decoder LoginResponse
+loginResultDecoder =
+  DecodePipeline.decode LoginResponse
+    |> required "access_token" string
+    |> required "user" userDecoder
+
 modelDecoder : Decoder LTS
 modelDecoder =
   DecodePipeline.decode LTS

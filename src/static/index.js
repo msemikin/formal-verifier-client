@@ -29,7 +29,7 @@ app.ports.openDialog.subscribe(function () {
 
 app.ports.closeDialog.subscribe(function () {
   var dialog = document.querySelector('dialog');
-  dialog.close();
+  dialog.open && dialog.close();
 });
 
 app.ports.generateDiagram.subscribe(function (src) {
