@@ -1,6 +1,5 @@
 module Project.View exposing (view)
 
-import Http
 import Dict exposing (Dict)
 import Form exposing (Form)
 import Html exposing (..)
@@ -42,7 +41,7 @@ view project
         div [ class "project-container" ]
           [ case currentDialog of
               ModelDialog -> createModelDialog syntaxError modelForm mdl
-              FormulaDialog -> createFormulaDialog syntaxError formulaForm mdl
+              _ -> createFormulaDialog currentDialog syntaxError formulaForm mdl
           , case currentModelId of
               Nothing ->
                 div [ class "empty-project" ]
@@ -137,7 +136,7 @@ formulasEditor mdl formulas validations currentFormula =
           ) ++
           [ List.li
             [ cs "list-item list-item--separated"
-            , Options.attribute <| Html.Events.onClick OpenFormulaDialog
+            , Options.attribute <| Html.Events.onClick OpenAddFormula
             ]
             [ List.content []
               [ List.icon "add" []
@@ -145,15 +144,6 @@ formulasEditor mdl formulas validations currentFormula =
               ]
             ]
           ])
-      ]
-    , div [ class "formulas-footer" ]
-      [ Button.render Mdl [2] mdl
-        [ Button.raised
-        , Button.colored
-        , Button.ripple
-        , Button.onClick CheckModel
-        ]
-        [ text "Run"]
       ]
     ]
 
@@ -175,14 +165,15 @@ formulaListItem mdl index formula isSelected validation =
             List.icon "question" [ Color.text (Color.color Color.Red Color.S500)]
       , text formula
       ]
-    , editFormula mdl index
+    , editFormula mdl index formula
     ]
 
 
-editFormula : Material.Model -> Int -> Html Msg
-editFormula mdl index =
+editFormula : Material.Model -> Int -> String -> Html Msg
+editFormula mdl index formula =
   Button.render Mdl [10000 + index] mdl
     [ Button.icon 
+    , Button.onClick <| EditFormula formula
     ]
     [ Icon.i "edit" ] 
 
@@ -269,8 +260,8 @@ createModelDialog syntaxError form mdl =
         ]
       ]
 
-createFormulaDialog : Maybe String -> Form e o -> Material.Model -> Html Msg
-createFormulaDialog syntaxError form mdl =
+createFormulaDialog : CurrentDialog -> Maybe String -> Form e o -> Material.Model -> Html Msg
+createFormulaDialog currentDialog syntaxError form mdl =
   let
     getField = FormHelpers.getField form
     getFieldValue = FormHelpers.getFieldValue form
@@ -278,7 +269,13 @@ createFormulaDialog syntaxError form mdl =
     getError = FormHelpers.getError form
   in
     Dialog.view []
-      [ Dialog.title [] [ text "New formula" ]
+      [ Dialog.title []
+      [ text (case currentDialog of
+          AddFormulaDialog -> "Add formula"
+          EditFormulaDialog -> "Edit formula"
+          _ -> "Should not reach"
+        )
+      ]
       , Dialog.content [] [ div []
           [ Textfield.render Mdl [0] mdl
             ([ Textfield.label "Content"
@@ -292,11 +289,20 @@ createFormulaDialog syntaxError form mdl =
           ]
         ]
       , Dialog.actions []
-        [ Button.render Mdl [5] mdl
-          [ Button.colored
-          , Button.onClick <| AddFormula Form.Submit
-          ]
-          [ text "Create" ]
+        [ case currentDialog of
+          AddFormulaDialog ->
+            Button.render Mdl [5] mdl
+            [ Button.colored
+            , Button.onClick (AddFormula Form.Submit)
+            ]
+            [ text "Create" ]
+          _ ->
+            Button.render Mdl [5] mdl
+            [ Button.colored
+            , Button.onClick (UpdateFormula Form.Submit)
+            ]
+            [ text "Update" ]
+
         , Button.render Mdl [6] mdl
           [ Dialog.closeOn "click" ]
           [ text "Close" ]

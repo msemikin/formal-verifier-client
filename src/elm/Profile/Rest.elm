@@ -15,13 +15,11 @@ createProject { name, description } accessToken =
       [ ("name", Encode.string name)
       , ("description", Encode.string description)
       ]
-
-    request = Helpers.Rest.secureRequest
+  in
+    Helpers.Rest.secureRequest CreateProjectResult 
       { url = apiUrl ++ "/projects"
       , body = Http.jsonBody projectData
       , decoder = projectDecoder
       , method = "POST"
       , accessToken = accessToken
       }
-  in
-    Http.send CreateProjectResult request

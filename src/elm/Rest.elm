@@ -10,26 +10,20 @@ import Decoder exposing (..)
 
 silentLogin : String -> Cmd Msg
 silentLogin accessToken =
-  let
-    request = Helpers.Rest.secureRequest
-      { url = apiUrl ++ "/account"
-      , body = Http.emptyBody
-      , decoder = userDecoder
-      , method = "GET"
-      , accessToken = accessToken
-      }
-  in
-    Http.send SilentLoginResult request
+  Helpers.Rest.secureRequest SilentLoginResult 
+    { url = apiUrl ++ "/account"
+    , body = Http.emptyBody
+    , decoder = userDecoder
+    , method = "GET"
+    , accessToken = accessToken
+    }
 
 fetchProjects : String -> Cmd Msg
 fetchProjects accessToken =
-  let
-    request = Helpers.Rest.secureRequest
-      { url = apiUrl ++ "/projects"
-      , body = Http.emptyBody
-      , decoder = list projectDecoder
-      , method = "GET"
-      , accessToken = accessToken
-      }
-  in
-    Http.send ProjectsResult request
+  Helpers.Rest.secureRequest ProjectsResult 
+    { url = apiUrl ++ "/projects"
+    , body = Http.emptyBody
+    , decoder = list projectDecoder
+    , method = "GET"
+    , accessToken = accessToken
+    }

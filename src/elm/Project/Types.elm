@@ -17,14 +17,14 @@ type alias FormulaForm =
 
 type CurrentDialog =
     ModelDialog
-  | FormulaDialog
+  | AddFormulaDialog
+  | EditFormulaDialog
 
 
 type alias ValidationResult =
   { graph : String
   , valid : Bool
-  }
-
+  } 
 type alias Model =
   { mdl : Material.Model
   , modelForm : Form () ModelForm
@@ -54,9 +54,11 @@ type Msg =
   | DiagramGenerated String
   | AddFormula Form.Msg
   | OpenModelDialog
-  | OpenFormulaDialog
+  | OpenAddFormula
   | SelectTab Int
   | UpdateModelSource String
   | CheckModel
   | CheckModelResult (Result Http.Error (Dict String ValidationResult))
   | SelectFormula String
+  | EditFormula String
+  | UpdateFormula Form.Msg

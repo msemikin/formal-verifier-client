@@ -3,6 +3,7 @@ module Project.State exposing (..)
 import Debug
 import Material
 import Form exposing (Form)
+import Form.Field
 import Form.Validate as Validate exposing (..)
 import Dict
 import Http exposing (Error(..))
@@ -35,7 +36,13 @@ init project projectId accessToken =
         Just project ->
           case getFirstModel project of
             Just model ->
-              (Graphviz.generateDiagram model.graph, Just model.id, Just model.source)
+              ( Cmd.batch
+                [ Graphviz.generateDiagram model.graph
+                , checkModel projectId model.id accessToken
+                ]
+              , Just model.id, Just model.source
+              )
+
             Nothing -> 
               (Cmd.none, Nothing, Nothing)
         Nothing ->
@@ -57,7 +64,6 @@ init project projectId accessToken =
       }
     , effect
     )
-          
 
 update : Maybe Project -> Msg -> Model -> (Model, Cmd Msg)
 update project msg model =
@@ -68,7 +74,6 @@ update project msg model =
       { model | modelForm = Form.update formMsg model.modelForm }
     updateFormulaForm formMsg =
       { model | formulaForm = Form.update formMsg model.formulaForm }
-   
   in
     case msg of
       Mdl mdlMsg ->
@@ -89,20 +94,21 @@ update project msg model =
             Nothing -> (newModel, Cmd.none)
       
       CreateModelResult (Ok { id }) ->
-        ( { model | modelSource = Just "", currentModelId = Just id} , closeDialog "")
+        let
+          (updatedModel, effect) = 
+            update project (SelectModel id) model
+        in
+          (updatedModel, Cmd.batch [closeDialog "", effect])
 
       CreateModelResult (Err _) -> (model, Cmd.none)
 
       ProjectResult (Ok project) ->
-        let
-          _ = Debug.log "project result" project
-        in
-          case getFirstModel project of
-            Just { id, source } ->
-              update (Just project) (SelectModel id) { model | modelSource = Just source }
-            Nothing -> 
-              ( { model | currentModelId = Nothing } , Cmd.none )
-     
+        case getFirstModel project of
+          Just { id, source } ->
+            update (Just project) (SelectModel id) { model | modelSource = Just source }
+          Nothing -> 
+            ( { model | currentModelId = Nothing } , Cmd.none )
+      
       ProjectResult (Err _) -> ( model, Cmd.none )
 
       UpdateModel ->
@@ -112,9 +118,17 @@ update project msg model =
           _ -> (model, Cmd.none)
 
       UpdateModelResult (Ok { graph }) ->
-        ( { model | syntaxError = Nothing }
-        , Cmd.batch [Graphviz.generateDiagram graph, closeDialog ""]
-        )
+        let
+          (updatedModel, effect) =
+            update project CheckModel model
+        in
+          ( { updatedModel | syntaxError = Nothing }
+          , Cmd.batch
+            [ Graphviz.generateDiagram graph
+            , closeDialog ""
+            , effect
+            ]
+          )
 
       UpdateModelResult (Err (BadStatus response)) ->
         case decodeString (Decode.field "message" Decode.string) response.body of
@@ -137,21 +151,40 @@ update project msg model =
             _ -> (newModel, Cmd.none)
 
       SelectModel id ->
-        case getModel id of
-          Just { graph, source } ->
-            ( { model | currentModelId = Just id, modelSource = Just source }
-            , Graphviz.generateDiagram graph
-            )
-          _ -> (model, Cmd.none)
+        let
+          _ = Debug.log "" ("in SelectModel " ++ (toString <| getModel id) ++ " " ++ toString project)
+        in
+          case getModel id of
+            Just { source, graph } ->
+              let
+                modelWithSelectedModel =
+                  { model | currentModelId = Just id, modelSource = Just source }
+                (updatedModel, effect) = update project CheckModel modelWithSelectedModel
+                _ = Debug.log "effect" <| toString effect
+              in
+                ( updatedModel
+                , Cmd.batch [Graphviz.generateDiagram graph, effect]
+                )
+            _ -> (model, Cmd.none)
       
       DiagramGenerated diagram ->
         ( { model | diagram = Just diagram } , Cmd.none )
       
       OpenModelDialog ->
-        ( { model | currentDialog = ModelDialog }, openDialog "" )
+        ( { model |
+            currentDialog = ModelDialog
+          , modelForm = Form.initial [] validateModel
+          }
+          , openDialog ""
+        )
       
-      OpenFormulaDialog ->
-        ( { model | currentDialog = FormulaDialog }, openDialog "" )
+      OpenAddFormula ->
+        ( { model |
+            formulaForm = Form.initial [] validateFormula
+          , currentDialog = AddFormulaDialog
+          }
+          , openDialog ""
+        )
       
       SelectTab tab ->
         ( { model | currentTab = tab }, Cmd.none )
@@ -184,6 +217,37 @@ update project msg model =
             , Graphviz.generateDiagram graph
             )
           Nothing -> ( model, Cmd.none )
+
+      EditFormula formula ->
+        let
+          withUpdatedForm = updateFormulaForm
+            (Form.Input "content" Form.Text (Form.Field.String formula))
+          (updatedModel, effect) = update project (SelectFormula formula) withUpdatedForm
+        in
+          ( { updatedModel | currentDialog = EditFormulaDialog }
+          , Cmd.batch [openDialog "", effect]
+          )
+
+      UpdateFormula formMsg -> 
+        let
+          newModel = updateFormulaForm formMsg
+          output = Form.getOutput newModel.formulaForm
+        in
+          case (model.currentModelId, output, model.currentFormula) of
+            (Just modelId, Just { content }, Just currentFormula) ->
+              case getModel modelId of
+                Just { formulas } ->
+                  ( newModel
+                  , patchModel
+                      model.projectId
+                      modelId
+                      ( formulas |> List.map
+                          (\f -> if f == currentFormula then content else f)
+                      )
+                      model.accessToken
+                  )
+                _ -> (model, Cmd.none)
+            _ -> (newModel, Cmd.none)
 
 subscriptions : Sub Msg
 subscriptions =

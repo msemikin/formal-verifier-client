@@ -23,16 +23,14 @@ createModel projectId { name } accessToken =
     data = Encode.object
       [ ("name", Encode.string name)
       ]
-
-    request = Helpers.Rest.secureRequest
+  in
+    Helpers.Rest.secureRequest CreateModelResult
       { url = apiUrl ++ "/projects/" ++ projectId ++ "/models"
       , body = Http.jsonBody data
       , decoder = modelDecoder
       , method = "POST"
       , accessToken = accessToken
       }
-  in
-    Http.send CreateModelResult request
 
 
 updateModel : String -> String -> String -> String -> Cmd Msg
@@ -41,16 +39,14 @@ updateModel projectId modelId modelSource accessToken =
     data = Encode.object
       [ ("source", Encode.string modelSource)
       ]
-    
-    request = Helpers.Rest.secureRequest
+  in
+    Helpers.Rest.secureRequest UpdateModelResult
       { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelId
       , body = Http.jsonBody data
       , decoder = modelDecoder
       , method = "PUT"
       , accessToken = accessToken
       }
-  in
-    Http.send UpdateModelResult request
  
 
 patchModel : String -> String -> List String -> String -> Cmd Msg
@@ -58,41 +54,33 @@ patchModel projectId modelId formulas accessToken =
   let
     data = Encode.object
       [ ("formulas", Encode.list <| List.map Encode.string formulas)]
-
-    request = Helpers.Rest.secureRequest
+  in
+    Helpers.Rest.secureRequest UpdateModelResult
       { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelId
       , body = Http.jsonBody data
       , decoder = modelDecoder
       , method = "PATCH"
       , accessToken = accessToken
       }
-  in
-    Http.send UpdateModelResult request
 
 
 
 fetchProject : String -> String -> Cmd Msg
-fetchProject id accessToken=
-  let
-    request = Helpers.Rest.secureRequest
+fetchProject id accessToken =
+  Helpers.Rest.secureRequest ProjectResult
       { url = apiUrl ++ "/projects/" ++ id
       , body = Http.emptyBody
       , decoder = projectDecoder
       , method = "GET"
       , accessToken = accessToken
       }
-  in
-    Http.send ProjectResult request
 
 checkModel : String -> String -> String -> Cmd Msg
 checkModel projectId modelId accessToken =
-  let
-    request = Helpers.Rest.secureRequest
-      { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelId ++ "/check"
-      , body = Http.emptyBody
-      , decoder = Decode.dict decodeValidationResult
-      , method = "POST"
-      , accessToken = accessToken
-      }
-  in
-    Http.send CheckModelResult request
+  Helpers.Rest.secureRequest CheckModelResult
+    { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/" ++ modelId ++ "/check"
+    , body = Http.emptyBody
+    , decoder = Decode.dict decodeValidationResult
+    , method = "POST"
+    , accessToken = accessToken
+    }

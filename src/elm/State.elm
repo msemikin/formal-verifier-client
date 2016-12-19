@@ -76,7 +76,6 @@ initPage model route =
           let
             (data, effect) = Project.State.init project projectId accessToken
             project = Dict.get projectId model.projects
-            _ = Debug.log "state initPage" <| toString effect
           in
             ( { model | pageData = ProjectData data }, Cmd.map ProjectMsg effect)
 
@@ -100,6 +99,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   let
     _ = Debug.log "msg" (toString msg)
+    _ = Debug.log "" "-----------------------------------"
   in
     case msg of
       UpdateRoute route -> updateRoute route model
