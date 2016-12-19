@@ -215,7 +215,16 @@ update msg model =
             _ -> model
         in
           updateProject (Project.Types.DeleteModelResult (Ok success) modelId) updatedModel
-
+      
+      ProjectMsg (Project.Types.ComposeModelsResult (Ok newModel)) ->
+        let
+          updatedModel =
+            case model.currentRoute of
+              ProjectRoute projectId ->
+                { model | projects = insertModelInProject projectId newModel model.projects }
+              _ -> model
+        in
+          updateProject (Project.Types.CreateModelResult (Ok newModel)) updatedModel
       
       ProjectMsg msg -> updateProject msg model
 

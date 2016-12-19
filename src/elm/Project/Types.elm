@@ -6,6 +6,7 @@ import Material
 import Form exposing (Form)
 
 import Types exposing (..)
+import Dropdown.Types
 
 type alias ModelForm =
   { name : String
@@ -19,16 +20,23 @@ type CurrentDialog =
     ModelDialog
   | AddFormulaDialog
   | EditFormulaDialog
+  | ComposeDialog
 
 
 type alias ValidationResult =
   { graph : String
   , valid : Bool
   } 
+
 type alias Model =
   { mdl : Material.Model
   , modelForm : Form () ModelForm
   , formulaForm : Form () FormulaForm
+  , composeForm : Form () ModelForm
+  , firstDropdown : Dropdown.Types.Model
+  , secondDropdown : Dropdown.Types.Model
+  , composeModelFirst : Maybe String
+  , composeModelSecond : Maybe String
   , currentModelId : Maybe String
   , projectId : String
   , accessToken : String
@@ -45,6 +53,7 @@ type Msg =
     Mdl (Material.Msg Msg)
   | ModelFormMsg (Form.Msg)
   | FormulaFormMsg (Form.Msg)
+  | ComposeFormMsg (Form.Msg)
   | CreateModel Form.Msg
   | CreateModelResult (Result Http.Error LTS)
   | ProjectResult (Result Http.Error Project)
@@ -55,6 +64,7 @@ type Msg =
   | AddFormula Form.Msg
   | OpenModelDialog
   | OpenAddFormula
+  | OpenComposeDialog
   | SelectTab Int
   | UpdateModelSource String
   | CheckModel
@@ -65,3 +75,7 @@ type Msg =
   | DeleteFormula String
   | DeleteModel String
   | DeleteModelResult (Result Http.Error Bool) String
+  | ComposeModels Form.Msg
+  | ComposeModelsResult (Result Http.Error LTS)
+  | FirstDropdownMsg Dropdown.Types.DropdownMsg
+  | SecondDropdownMsg Dropdown.Types.DropdownMsg

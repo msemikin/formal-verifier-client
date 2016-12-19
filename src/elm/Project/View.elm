@@ -16,11 +16,14 @@ import Material.Textfield as Textfield
 import Material.Icon as Icon
 import Material.Color as Color
 import Material.Tabs as Tabs
+import Material.Menu as Menu
 import Json.Encode
 
 import Types exposing (..)
 import Project.Types exposing (..)
 import Helpers.Form as FormHelpers
+import Dropdown.View
+import Dropdown.Types
 
 view : Maybe Project -> Model -> Html Msg
 view project
@@ -28,6 +31,7 @@ view project
   , currentModelId
   , modelForm
   , formulaForm
+  , composeForm
   , mdl
   , currentDialog
   , currentTab
@@ -35,12 +39,24 @@ view project
   , syntaxError
   , formulasResults
   , currentFormula
+  , composeModelFirst
+  , composeModelSecond
+  , firstDropdown
+  , secondDropdown
   } =
     case project of
       Just project ->
         div [ class "project-container" ]
           [ case currentDialog of
               ModelDialog -> createModelDialog syntaxError modelForm mdl
+              ComposeDialog -> composeDialog
+                  firstDropdown
+                  secondDropdown
+                  composeForm
+                  (Dict.values project.models)
+                  (composeModelFirst |> Maybe.andThen (\id -> Dict.get id project.models))
+                  (composeModelSecond |> Maybe.andThen (\id -> Dict.get id project.models))
+                  mdl
               _ -> createFormulaDialog currentDialog syntaxError formulaForm mdl
           , case currentModelId of
               Nothing ->
@@ -214,12 +230,19 @@ modelsList selectedModelId project mdl =
           <| Dict.values project.models
         ) ++
           [ List.li
-            [ cs "list-item list-item--separated"
-            , Options.attribute <| Html.Events.onClick OpenModelDialog
+            [ cs "list-item list-item--separated" , Options.attribute <| Html.Events.onClick OpenModelDialog
             ]
             [ List.content []
               [ List.icon "add" []
               , text "Create new..."
+              ]
+            ]
+          , List.li
+            [ cs "list-item" , Options.attribute <| Html.Events.onClick OpenComposeDialog
+            ]
+            [ List.content []
+              [ List.icon "add" []
+              , text "Compose"
               ]
             ]
           ]
@@ -331,3 +354,43 @@ createFormulaDialog currentDialog syntaxError form mdl =
           [ text "Close" ]
         ]
       ]
+
+composeDialog : Dropdown.Types.Model -> Dropdown.Types.Model -> Form e o -> List LTS -> Maybe LTS -> Maybe LTS -> Material.Model -> Html Msg
+composeDialog firstDropdown secondDropdown form models firstComposeModel secondComposeModel mdl =
+  let
+    getField = FormHelpers.getField form
+    getFieldValue = FormHelpers.getFieldValue form
+    connectField = FormHelpers.connectField ComposeFormMsg form
+    getError = FormHelpers.getError form
+  in
+    Dialog.view []
+      [ Dialog.title []
+        [ text "Compose models" ]
+      , Dialog.content [] [ div []
+          [ Textfield.render Mdl [0] mdl
+            ([ Textfield.label "Name"
+            , Textfield.floatingLabel
+            , cs "field"
+            , getError "name" "Name is required"
+            ] ++ connectField "name")
+          , Html.map
+              FirstDropdownMsg
+              (Dropdown.View.view models firstComposeModel firstDropdown)
+          , Html.map
+              SecondDropdownMsg
+              (Dropdown.View.view models secondComposeModel secondDropdown)
+          ]
+        ]
+      , Dialog.actions []
+        [ Button.render Mdl [5] mdl
+          [ Button.colored
+          , Button.onClick (ComposeModels Form.Submit)
+          ]
+          [ text "Create" ]
+        , Button.render Mdl [6] mdl
+          [ Dialog.closeOn "click" ]
+          [ text "Close" ]
+        ]
+      ]
+    
+ 

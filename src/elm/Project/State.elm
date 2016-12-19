@@ -13,6 +13,8 @@ import Types exposing (..)
 import Project.Types exposing (..)
 import Project.Rest exposing (..)
 import Dialog exposing (..)
+import Dropdown.State
+import Dropdown.Types
 import Graphviz
 
 validateModel : Validation () ModelForm
@@ -51,6 +53,9 @@ init project projectId accessToken =
     ( { mdl = Material.model
       , modelForm = Form.initial [] validateModel
       , formulaForm = Form.initial [] validateFormula
+      , composeForm = Form.initial [] validateModel
+      , composeModelFirst = Nothing
+      , composeModelSecond = Nothing
       , currentModelId = currentModelId
       , projectId = projectId
       , accessToken = accessToken
@@ -61,6 +66,8 @@ init project projectId accessToken =
       , formulasResults = Nothing
       , currentFormula = Nothing
       , syntaxError = Nothing
+      , firstDropdown = Dropdown.State.init
+      , secondDropdown = Dropdown.State.init
       }
     , effect
     )
@@ -74,6 +81,8 @@ update project msg model =
       { model | modelForm = Form.update formMsg model.modelForm }
     updateFormulaForm formMsg =
       { model | formulaForm = Form.update formMsg model.formulaForm }
+    updateComposeForm formMsg =
+      { model | composeForm = Form.update formMsg model.composeForm }
   in
     case msg of
       Mdl mdlMsg ->
@@ -82,6 +91,8 @@ update project msg model =
       ModelFormMsg formMsg -> (updateModelForm formMsg, Cmd.none)
       
       FormulaFormMsg formMsg -> (updateFormulaForm formMsg, Cmd.none)
+
+      ComposeFormMsg formMsg -> (updateComposeForm formMsg, Cmd.none)
       
       CreateModel formMsg ->
         let
@@ -186,6 +197,16 @@ update project msg model =
           , openDialog ""
         )
       
+      OpenComposeDialog ->
+        ( { model |
+            composeForm = Form.initial [] validateModel
+          , currentDialog = ComposeDialog
+          , composeModelFirst = Nothing
+          , composeModelSecond = Nothing
+          }
+        , openDialog ""
+        )
+      
       SelectTab tab ->
         ( { model | currentTab = tab }, Cmd.none )
       
@@ -274,6 +295,50 @@ update project msg model =
         )
       
       DeleteModelResult (Err _) _ -> (model, Cmd.none)
+      
+      ComposeModels formMsg ->
+        let
+          newModel = updateComposeForm formMsg
+          output = Form.getOutput newModel.composeForm
+        in
+          case (output, newModel.composeModelFirst, newModel.composeModelSecond) of
+            (Just { name }, Just firstModelId, Just secondModelId) ->
+              ( model
+              , composeModels
+                  model.projectId
+                  name
+                  firstModelId
+                  secondModelId
+                  model.accessToken
+              )
+            _ -> (model, Cmd.none)
+      
+      ComposeModelsResult (Ok _) ->
+        (model, closeDialog "")
+     
+      ComposeModelsResult (Err _) ->
+        (model, Cmd.none)
+      
+      FirstDropdownMsg (Dropdown.Types.DropdownSelect value) ->
+        ( { model | composeModelFirst = Just value } , Cmd.none)
+
+      FirstDropdownMsg msg ->
+        let
+          (dropdown, effect) =
+            Dropdown.State.update msg model.firstDropdown
+        in
+          ( { model | firstDropdown = dropdown }, Cmd.map FirstDropdownMsg effect)
+
+      SecondDropdownMsg (Dropdown.Types.DropdownSelect value) ->
+        ( { model | composeModelSecond = Just value } , Cmd.none)
+
+      SecondDropdownMsg msg ->
+        let
+          (dropdown, effect) =
+            Dropdown.State.update msg model.secondDropdown
+        in
+          ( { model | secondDropdown = dropdown } , Cmd.map SecondDropdownMsg effect)
+          
 
 
 subscriptions : Sub Msg

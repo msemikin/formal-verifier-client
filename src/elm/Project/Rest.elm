@@ -95,3 +95,20 @@ deleteModel projectId modelId accessToken =
     , method = "DELETE"
     , accessToken = accessToken
     } |> Cmd.map (\result -> result modelId)
+
+composeModels : String -> String -> String -> String -> String -> Cmd Msg
+composeModels projectId name firstModelId secondModelId accessToken =
+  let
+    data = Encode.object
+      [ ("first_model_id", Encode.string firstModelId)
+      , ("second_model_id", Encode.string secondModelId)
+      , ("name", Encode.string name)
+      ]
+  in
+    Helpers.Rest.secureRequest ComposeModelsResult
+      { url = apiUrl ++ "/projects/" ++ projectId ++ "/models/compose"
+      , body = Http.jsonBody data
+      , decoder = modelDecoder
+      , method = "POST"
+      , accessToken = accessToken
+      }
