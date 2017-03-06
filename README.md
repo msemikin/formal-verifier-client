@@ -1,6 +1,6 @@
 # elm-webpack-starter
 
-A simple Webpack setup for writing [Elm](http://elm-lang.org/) apps:
+Based on the [Simple Webpack setup](https://github.com/elm-community/elm-webpack-starter) for writing  [Elm](http://elm-lang.org/) apps:
 
 * Dev server with live reloading, HMR
 * Support for CSS/SCSS (with Autoprefixer), image assets
